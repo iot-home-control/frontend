@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <script src="js/config.js"></script>
+        <script src="js/main.js"></script>
+
+        <template id="template-temperature">
+            <div>
+                <span>Temperature: <span name="name">Anonymous</span></span>
+                <span><span name="value">-</span> °C</span>
+            </div>
+        </template>
+        <template id="template-humidity">
+            <div>
+                <span>Humidity: <span name="name">Anonymous</span></span>
+                <span><span name="value">-</span> %</span>
+            </div>
+        </template>
+        <template id="template-shelly">
+            <div>
+                <span>Shelly: <span name="name">Anonymous</span></span>
+                <input type="checkbox">
+                <span name="pending">*</span>
+            </div>
+        </template>
+    </head>
+    <body>
+        <p id="status"></p>
+        <hr/>
+        <div id="content"></div>
+    </body>
+</html>
