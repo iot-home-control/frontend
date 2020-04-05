@@ -1,34 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html>
     <head>
-        <meta charset="UTF-8">
-        <script src="js/config.js"></script>
-        <script src="js/main.js"></script>
+        <meta charset="utf-8">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#fafafa">
+
+        <link rel="stylesheet" type="text/css" href="css/style.css">
 
         <template id="template-temperature">
-            <div>
-                <span>Temperature: <span name="name">Anonymous</span></span>
-                <span><span name="value">-</span> °C</span>
+            <div class="thing thing-temperature">
+                <div class="thing-detail">
+                    <div><span name="value">-</span> °C</div>
+                </div>
+                <div class="thing-name"><span name="name">Anonymous</span></div>
             </div>
         </template>
         <template id="template-humidity">
-            <div>
-                <span>Humidity: <span name="name">Anonymous</span></span>
-                <span><span name="value">-</span> %</span>
+            <div class="thing thing-humidity">
+                <div class="thing-detail">
+                    <div><span name="value">-</span> %</div>
+                </div>
+                <div class="thing-name"><span name="name">Anonymous</span></div>
             </div>
         </template>
         <template id="template-shelly">
-            <div>
-                <span>Shelly: <span name="name">Anonymous</span></span>
-                <input type="checkbox">
-                <span name="pending">*</span>
+            <div class="thing thing-shelly">
+                <div class="thing-detail">
+                    <input type="checkbox">
+                    <span name="pending">*</span>
+                </div>
+                <div class="thing-name"><span name="name">Anonymous</span></div>
+            </div>
+        </template>
+        <template id="template-switch">
+            <div class="thing thing-switch">
+                <div class="thing-detail">
+                    <input type="checkbox">
+                    <span name="pending">*</span>
+                </div>
+                <div class="thing-name"><span name="name">Anonymous</span></div>
             </div>
         </template>
     </head>
     <body>
-        <p id="status"></p>
-        <hr/>
+        <ul id="bar">
+            <li class="toggle"><a>☰</a></li>
+            <li id="status"></li>
+        </ul>
         <div id="content"></div>
+
+        <script src="js/config.js"></script>
+        <script src="js/main.js"></script>
     </body>
 </html>

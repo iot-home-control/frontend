@@ -1,0 +1,127 @@
+html {
+    font-family: sans-serif;
+}
+
+#content {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.thing {
+    display: inline-block;
+    width: 8rem;
+}
+
+.thing-detail {
+    width: 6rem;
+    height: 6rem;
+    border: 1px solid black;
+    padding: 0.25rem;
+    margin: 0.25rem auto;
+}
+
+.timed-out .thing-name span[name="name"]::after {
+    color: red;
+    font-weight: bolder;
+    content: " !";
+}
+
+.timeout-unknown .thing-name span[name="name"]::after {
+    color: orange;
+    content: " ?";
+}
+
+.thing-detail > div {
+    text-align: center;
+    font-size: 18pt;
+    position: relative;
+    margin: auto;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.thing-name {
+    text-align: center;
+    margin: auto;
+}
+
+.thing-shelly input[type="checkbox"], .thing-switch input[type="checkbox"] {
+    display: none;
+}
+
+ul#bar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+
+    margin-bottom: 10px;
+}
+  
+#bar li {
+    float: left;
+    border-right: 1px solid #bbb;
+}
+
+#bar li.active {
+    background-color: #4CAF50;
+}
+
+#bar li:last-child {
+    border-right: none;
+  }
+  
+#bar li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+#bar li a:hover {
+    background-color: #111;
+}
+
+.toggle {
+    float: left;
+    display: none;
+}
+
+@media screen and (max-width: 600px) { 
+    ul#bar li.menu-item {
+        float: none;
+        display: none;
+        border-right: none;
+    }
+    .toggle {
+        display: initial;
+        border-right: 1px solid #bbb;
+    }
+  }
+
+/* Change the link color to #111 (black) on hover */
+#bar li a:hover {
+    background-color: #111;
+}
+
+li#status {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    float: right;
+}
+
+.on {
+    background-color: rgb(99, 99, 99);
+    color: black;
+}
+
+.off {
+}
