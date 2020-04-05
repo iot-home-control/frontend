@@ -149,6 +149,25 @@ let show_view = (name) => {
     current_view = name;
 };
 
+let describe_time_diff = (seconds) => {
+    if(seconds < 15)
+        return "Just now";
+    else if(seconds < 60)
+        return seconds.toFixed() + " seconds ago";
+    else if(seconds < 60*60)
+        return (seconds/60).toFixed() + " minutes ago";
+    else if(seconds < 60*60*24)
+        return (seconds/60/60).toFixed() + " hours ago";
+    else if(seconds < 60*60*24*7)
+        return (seconds/60/60/24).toFixed() + " days ago";
+    else if(seconds < 60*60*24*30)
+        return (seconds/60/60/24/7).toFixed() + "weeks ago";
+    else if(seconds < 60*60*24*356)
+        return (seconds/60*60*24*30).toFixed() + " months ago";
+    else
+        return (seconds/60*60*24*356).toFixed() + " years ago";
+}
+
 let handle_message = (data) => {
     if(data.type === "things") {
         data.things.forEach(thing => {
@@ -210,8 +229,21 @@ let handle_message = (data) => {
             const diff = now - date;
             if(diff > last_seen_warning_interval) {
                 elem.classList.add("timed-out");
+
+                let name_elem = elem.querySelector('.thing-name[rel="tooltip"]');
+                if(!name_elem) {
+                    name_elem = elem.querySelector(".thing-name");
+                    name_elem.setAttribute("rel", "tooltip");
+                    window.setup_tooltip(name_elem);
+                }
+                name_elem.title = "Last seen " + describe_time_diff(diff/1000);
             } else {
                 elem.classList.remove("timed-out");
+                let name_elem = elem.querySelector('.thing-name[rel="tooltip"]');
+                if(name_elem) {
+                    name_elem.setAttribute("rel", null);
+                    name_elem.title = null;
+                }
             }
         }
         current_last_seen_timeout_id = setTimeout(get_last_seen, get_last_seen_interval);
