@@ -17,13 +17,8 @@ let update_checkbox = (e, b) => {
 };
 
 let clear_pending_indicator = (e) => {
-    if(e.nodeName == "SPAN") {
-        e.style.display = "none";
-        return;
-    }
-
-    let span = e.querySelector("span[name='pending']");
-    span.style.display = "none";
+    let detail = e.querySelector(".thing-detail");
+    detail.classList.remove("pending");
 };
 
 const updaters = {
@@ -55,25 +50,27 @@ let checkbox_initializer = (thing, e) => {
     let checkbox = e.querySelector("input[type='checkbox']");
     div.addEventListener('click', () => {
         checkbox.click();
+        div.classList.add("pending");
     });
-    let span = e.querySelector("span[name='pending']");
-    span.style.display = "none";
+
     let cb = () => {
+        
+        console.log(div);
         socket.send(JSON.stringify({
             type: "command",
             id: thing.id,
             value: checkbox.checked,
         }));
-        div.classList.remove(checkbox.checked ? "off": "on");
-        div.classList.add(checkbox.checked ? "on": "off");
+        //div.classList.remove(checkbox.checked ? "off": "on");
+        //div.classList.add(checkbox.checked ? "on": "off");
         const prev_value = !checkbox.checked;
         add_pending_change(thing, setTimeout(() => {
             checkbox.checked = prev_value;
             div.classList.remove(checkbox.checked ? "off": "on");
             div.classList.add(checkbox.checked ? "on": "off");
-            clear_pending_indicator(span);
+            div.classList.remove("pending");
         }, 1000));
-        span.style.display = null;
+        div.classList.remove("pending");
     };
     checkbox.addEventListener("change", cb);
 };

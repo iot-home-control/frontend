@@ -1,5 +1,6 @@
 html {
     font-family: sans-serif;
+    background-color: rgb(47,47,47);
 }
 
 #content {
@@ -11,16 +12,18 @@ html {
 }
 
 .thing {
+    color: rgb(198,213,210);
     display: inline-block;
-    width: 8rem;
+    width: 7rem;
 }
 
 .thing-detail {
     width: 6rem;
     height: 6rem;
-    border: 1px solid black;
+    border: 1px solid rgb(198,213,210);
     padding: 0.25rem;
     margin: 0.25rem auto;
+    position: relative;
 }
 
 .timed-out .thing-name span[name="name"]::after {
@@ -34,18 +37,25 @@ html {
     content: " ?";
 }
 
-.thing-detail > div {
+.thing-value {
     text-align: center;
     font-size: 18pt;
     position: relative;
     margin: auto;
-    top: 50%;
+    top: 40%;
     transform: translateY(-50%);
 }
 
 .thing-name {
     text-align: center;
+    font-size: 10pt;
+    text-align: center;
     margin: auto;
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    
 }
 
 .thing-shelly input[type="checkbox"], .thing-switch input[type="checkbox"] {
@@ -57,18 +67,16 @@ ul#bar {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #333;
-
+    border-bottom: 1px solid rgb(198,213,210);
     margin-bottom: 10px;
 }
   
 #bar li {
     float: left;
-    border-right: 1px solid #bbb;
 }
 
 #bar li.active {
-    background-color: #4CAF50;
+    background-color: rgb(66, 187, 243);
 }
 
 #bar li:last-child {
@@ -84,7 +92,7 @@ ul#bar {
 }
 
 #bar li a:hover {
-    background-color: #111;
+    background-color: rgb(66, 187, 243);
 }
 
 .toggle {
@@ -106,7 +114,7 @@ ul#bar {
 
 /* Change the link color to #111 (black) on hover */
 #bar li a:hover {
-    background-color: #111;
+    background-color: rgb(66, 187, 243);
 }
 
 li#status {
@@ -118,8 +126,12 @@ li#status {
     float: right;
 }
 
+.pending {
+    border-color: rgb(66, 187, 243);
+}
+
 .on {
-    background-color: rgb(99, 99, 99);
+    background-color: rgb(66, 187, 243);
     color: black;
 }
 
