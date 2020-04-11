@@ -316,3 +316,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+
+
+let on_focus = () => {
+    ws_connect();
+};
+
+/* reserverd for future use
+let lost_focus = () => {
+    console.log("Lost focus");
+};
+
+window.addEventListener('blur', lost_focus);
+*/
+window.addEventListener('focus', on_focus);
