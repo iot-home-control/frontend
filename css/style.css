@@ -3,6 +3,12 @@ html {
     background-color: rgb(47,47,47);
 }
 
+/* TODO: ggf. mit media querys anpasse*/
+#middle {
+    max-width: 1200px; 
+    margin: 0 auto;
+}
+
 #content {
     display: flex;
     flex-direction: row;
@@ -62,13 +68,23 @@ html {
     display: none;
 }
 
+#top {
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid rgb(198,213,210);
+    margin-bottom: 10px;
+}
+
+#menu {
+    max-width: 1200px; 
+    margin: 0 auto;
+}
+
 ul#bar {
     list-style-type: none;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    border-bottom: 1px solid rgb(198,213,210);
-    margin-bottom: 10px;
 }
   
 #bar li {
@@ -107,8 +123,7 @@ ul#bar {
         border-right: none;
     }
     .toggle {
-        display: initial;
-        border-right: 1px solid #bbb;
+        display: block;
     }
   }
 
