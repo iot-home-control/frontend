@@ -80,6 +80,19 @@ const initalizers = {
     switch: checkbox_initializer,
 };
 
+let apply_feather = (root) => {
+    for(let element of root.querySelectorAll("[data-feather]")) {
+        let svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svgElem.classList = element.classList;
+
+        let useElem = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        useElem.setAttribute("href", "img/feather-sprite.svg#" + element.dataset.feather);
+
+        svgElem.appendChild(useElem);
+        element.parentElement.replaceChild(svgElem, element);
+    }
+}
+
 let create_thing_element = (thing) => {
     const template = document.getElementById("template-" + thing.type);
     if(!template) {
@@ -99,6 +112,7 @@ let create_thing_element = (thing) => {
         initalizers[thing.type](thing, e);
     }
 
+    apply_feather(e);
     const things = document.getElementById("content");
     things.appendChild(e);
 
@@ -272,7 +286,7 @@ let ws_connect = () => {
 
     socket.addEventListener("open", function(event) {
         console.log("Connected");
-        set_status('<svg class="feather"><use xlink:href="img/feather-sprite.svg#cloud"/></svg>');
+        set_status('<svg class="feather"><use href="img/feather-sprite.svg#cloud"/></svg>');
         reconnect_attempt = 0;
         ws_connected = true;
 
@@ -288,7 +302,7 @@ let ws_connect = () => {
         ws_connected = false;
         const time = 1000 + reconnect_attempt*1000;
         const status_str = "Disconnected. Trying to reconnect in "+ time/1000 + " seconds.";
-        set_status('<svg class="feather"><use xlink:href="img/feather-sprite.svg#cloud-off"/></svg>');
+        set_status('<svg class="feather"><use href="img/feather-sprite.svg#cloud-off"/></svg>');
         console.log(status_str);
 
         setTimeout(() => {

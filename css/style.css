@@ -52,6 +52,13 @@ html {
     transform: translateY(-50%);
 }
 
+.thing-value span {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: pointer;
+}
+
 .thing-name {
     text-align: center;
     font-size: 10pt;
@@ -61,7 +68,6 @@ html {
     bottom: 5%;
     left: 50%;
     transform: translateX(-50%);
-    
 }
 
 .thing-shelly input[type="checkbox"], .thing-switch input[type="checkbox"] {
@@ -153,7 +159,6 @@ li#status {
 
 .off {
 }
-
 
 .feather {
   width: 12pt;
