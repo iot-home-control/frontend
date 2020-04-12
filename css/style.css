@@ -89,6 +89,7 @@ ul#bar {
   
 #bar li {
     float: left;
+    
 }
 
 #bar li.active {
@@ -101,7 +102,7 @@ ul#bar {
   
 #bar li a {
     display: block;
-    color: white;
+    color: rgb(198,213,210);
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
@@ -134,7 +135,7 @@ ul#bar {
 
 li#status {
     display: block;
-    color: white;
+    color: rgb(198,213,210);
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
@@ -151,4 +152,25 @@ li#status {
 }
 
 .off {
+}
+
+
+.feather {
+  width: 12pt;
+  height: 12pt;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: rgb(198,213,210);
+}
+
+.feather-big {
+  width: 18pt;
+  height: 18pt;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }

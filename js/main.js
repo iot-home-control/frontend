@@ -249,7 +249,8 @@ let handle_message = (data) => {
 
 let set_status = (msg) => {
     const e = document.getElementById("status");
-    e.innerText = msg;
+    e.innerHTML = msg;
+    //e.innerText = msg;
 };
 
 let get_last_seen = () => {
@@ -271,7 +272,7 @@ let ws_connect = () => {
 
     socket.addEventListener("open", function(event) {
         console.log("Connected");
-        set_status("Connected");
+        set_status('<svg class="feather"><use xlink:href="img/feather-sprite.svg#cloud"/></svg>');
         reconnect_attempt = 0;
         ws_connected = true;
 
@@ -287,7 +288,7 @@ let ws_connect = () => {
         ws_connected = false;
         const time = 1000 + reconnect_attempt*1000;
         const status_str = "Disconnected. Trying to reconnect in "+ time/1000 + " seconds.";
-        set_status(status_str);
+        set_status('<svg class="feather"><use xlink:href="img/feather-sprite.svg#cloud-off"/></svg>');
         console.log(status_str);
 
         setTimeout(() => {
