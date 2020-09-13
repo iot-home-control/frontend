@@ -7,11 +7,11 @@
     "theme_color": "#fafafa",
     "scope": "/",
     "icons": [{
-        "src": "img/pwa-192.png",
+        "src": "img/pwa-192x192.png",
         "sizes": "192x192"
     },
     {
-        "src": "img/pwa-512.png",
+        "src": "img/pwa-512x512.png",
         "sizes": "512x512"
     }]
 }
