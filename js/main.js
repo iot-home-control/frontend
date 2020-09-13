@@ -1,4 +1,10 @@
+
 "use strict";
+
+const WS_CONNECTING = 0;
+const WS_OPEN = 1;
+const WS_CLOSING = 2;
+const WS_CLOSED = 3;
 
 let socket = null;
 let things = {};
@@ -270,7 +276,7 @@ let set_status = (msg) => {
 };
 
 let get_last_seen = () => {
-    if(!ws_connected) {
+    if(socket.readyState != WS_OPEN) {
         return;
     }
 
@@ -279,7 +285,6 @@ let get_last_seen = () => {
 
 const last_seen_warning_interval = 3 * 60 * 1000;
 const get_last_seen_interval = 30 * 1000;
-let ws_connected = false;
 let reconnect_attempt = 0;
 let current_last_seen_timeout_id = null;
 
@@ -290,7 +295,6 @@ let ws_connect = () => {
         console.log("Connected");
         set_status('<svg class="feather"><use href="img/feather-sprite.svg#cloud"/></svg>');
         reconnect_attempt = 0;
-        ws_connected = true;
 
         if(current_last_seen_timeout_id) {
             clearTimeout(current_last_seen_timeout_id);
@@ -301,10 +305,14 @@ let ws_connect = () => {
     });
     
     socket.addEventListener("close", function(event) {
-        ws_connected = false;
+        set_status('<svg class="feather"><use href="img/feather-sprite.svg#cloud-off"/></svg>');
+
+        if(document.hidden) {
+            return;
+        }
+
         const time = 1000 + reconnect_attempt*1000;
         const status_str = "Disconnected. Trying to reconnect in "+ time/1000 + " seconds.";
-        set_status('<svg class="feather"><use href="img/feather-sprite.svg#cloud-off"/></svg>');
         console.log(status_str);
 
         setTimeout(() => {
@@ -323,7 +331,8 @@ let ws_connect = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     ws_connect();
-    document.querySelector(".toggle a").addEventListener('click', () => {
+    document.querySelector(".toggle a").addEventListener('click', (e) => {
+        e.preventDefault();
         document.querySelectorAll(".menu-item").forEach((item) => {
             if(!item.style.display || item.style.display === "none") {
                 item.style.display = "block";
@@ -334,16 +343,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+document.addEventListener('visibilitychange', () => {
+    if(!socket) {
+        return;
+    }
 
-let on_focus = () => {
-    ws_connect();
-};
-
-/* reserverd for future use
-let lost_focus = () => {
-    console.log("Lost focus");
-};
-
-window.addEventListener('blur', lost_focus);
-*/
-window.addEventListener('focus', on_focus);
+    const hidden = document.hidden;
+    console.info("Page visibility changed", !hidden);
+    const state = socket.readyState;
+    if(hidden && state <= WS_OPEN) {
+        socket.close(1000);
+    } else if(!hidden && state === WS_CLOSED) {
+        ws_connect();
+    }
+}, false);
