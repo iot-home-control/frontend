@@ -1,0 +1,10 @@
+{
+    "name": "Home Control",
+    "display": "standalone",
+    "background_color": "#fafafa",
+    "scope": "/",
+    "icons": [{
+        "src": "img/logo.svg",
+        "sizes": "any"
+    }]
+}
