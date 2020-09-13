@@ -1,10 +1,13 @@
 {
     "name": "Home Control",
+    "short_name": "Home Control",
+    "start_url": ".",
     "display": "standalone",
     "background_color": "#fafafa",
+    "theme_color": "#fafafa",
     "scope": "/",
     "icons": [{
         "src": "img/logo.svg",
-        "sizes": "any"
+        "sizes": "48x48 72x72 96x96 128x128 256x256"
     }]
 }

@@ -357,3 +357,7 @@ document.addEventListener('visibilitychange', () => {
         ws_connect();
     }
 }, false);
+
+if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('worker.js');
+};
