@@ -359,5 +359,5 @@ document.addEventListener('visibilitychange', () => {
 }, false);
 
 if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('worker.js');
+    navigator.serviceWorker.register('js/worker.js');
 };
