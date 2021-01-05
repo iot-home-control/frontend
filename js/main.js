@@ -180,11 +180,11 @@ let describe_time_diff = (seconds) => {
     else if(seconds < 60*60*24*7)
         return (seconds/60/60/24).toFixed() + " days ago";
     else if(seconds < 60*60*24*30)
-        return (seconds/60/60/24/7).toFixed() + "weeks ago";
+        return (seconds/60/60/24/7).toFixed() + " weeks ago";
     else if(seconds < 60*60*24*356)
-        return (seconds/60*60*24*30).toFixed() + " months ago";
+        return (seconds/60/60/24/30).toFixed() + " months ago";
     else
-        return (seconds/60*60*24*356).toFixed() + " years ago";
+        return (seconds/60/60/24/356).toFixed() + " years ago";
 }
 
 let handle_message = (data) => {
