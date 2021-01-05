@@ -185,3 +185,35 @@ li#status, li#settings {
   stroke-linejoin: round;
   fill: none;
 }
+
+.overlay {
+    /*width: 100%;*/
+    z-index: 1;
+    background-color: rgba(0,0,0,0.5);
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.dialog {
+    color: var(--text);
+    padding: 1rem;
+    margin: 1rem;
+    background-color: var(--bg);
+    border: 1px solid var(--text);
+
+}
+
+@media screen and (min-width: 600px) {
+    .dialog {
+        margin: 10rem;
+    }
+}
+
+.dialog label {
+    margin-right: 1rem;
+}

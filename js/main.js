@@ -187,6 +187,46 @@ let describe_time_diff = (seconds) => {
         return (seconds/60/60/24/356).toFixed() + " years ago";
 }
 
+const show_thing_edit_dialog = (data) => {
+    const template = document.getElementById("template-edit-thing");
+    if(!template) {
+        console.warn("No template for type", thing.type);
+        return null;
+    }
+
+    const e = template.content.cloneNode(true);
+
+    e.querySelector('*[name=thing-name]').value = data.name;
+    e.querySelector('*[name=thing-id]').value = data.id;
+    const type_select = e.querySelector('*[name=thing-type]');
+    for(const entry of data.types) {
+        const element = document.createElement('option');
+        element.value = entry.value;
+        element.text = entry.text;
+        element.selected = entry.value === data.thing_type;
+        type_select.add(element);
+    }
+    e.querySelector('*[name=thing-device-id]').value = data.device_id;
+    e.querySelector('*[name=thing-vnode]').value = data.vnode;
+    e.querySelector('*[name=thing-visible]').checked = data.visible;
+    const views_select = e.querySelector('*[name=thing-views]');
+    for(const entry of data.views) {
+        const element = document.createElement('option');
+        element.value = entry.value;
+        element.text = entry.text;
+        element.selected = data.thing_views.find(element => element === entry.value);
+        views_select.add(element);
+    }
+    e.querySelector('button[name=button-accept]').addEventListener('click', () => console.log('accept'));
+    e.querySelector('button[name=button-reject]').addEventListener('click', () => console.log('reject'));
+
+    const overlay = document.createElement('div');
+    overlay.setAttribute('class', 'overlay');
+    overlay.appendChild(e);
+
+    return overlay;
+}
+
 let handle_message = (data) => {
     if(data.type === "things") {
         data.things.forEach(thing => {
@@ -266,6 +306,10 @@ let handle_message = (data) => {
             }
         }
         current_last_seen_timeout_id = setTimeout(get_last_seen, get_last_seen_interval);
+    } else if(data.type == "edit_data") {
+        console.log("edit_data", data)
+        const elem = show_thing_edit_dialog(data.data);
+        document.getElementsByTagName('body')[0].appendChild(elem);
     }
 };
 
@@ -340,6 +384,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.style.display = "none";
             }
         });
+    });
+    document.querySelector('#settings').addEventListener('click', (e) => {
+        socket.send(JSON.stringify({
+            type: "create_or_edit",
+            id: null,
+        }));
     });
 });
 
