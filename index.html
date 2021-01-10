@@ -13,18 +13,24 @@
         <link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
 
         <template id="template-edit-thing">
-            <div class="dialog dialog-edit-thing">
-                <form>
+            <div class="dialog-frame"> 
+                <div class="dialog dialog-edit-thing">
                     <input type="hidden" name="thing-id"></input>
-                    <label for="thing-name">Name</label><input type="text" name="thing-name"></input><br/>
-                    <label for="thing-type">Type</label><select name="thing-type"></select><br/>
-                    <label for="thing-device-id">Device ID</label><input type="text" name="thing-device-id"></input><br/>
-                    <label for="thing-vnode">VNode</label><input type="text" name="thing-vnode"></input><br/>
-                    <label for="thing-visible">Visible</label><input type="checkbox" name="thing-visible"></input><br/>
-                    <label for="thing-views">In Views</label><select name="thing-views" multiple></select><br/>
-                    <button name="button-accept">Save</button>
-                    <button name="button-reject">Discard</button>
-                </form>
+                    <div class="label"><label for="thing-name">Name</label></div>
+                    <div class="control"><input type="text" name="thing-name"></input></div>
+                    <div class="label"><label for="thing-type">Type</label></div>
+                    <div class="control"><select name="thing-type"></select></div>
+                    <div class="label"><label for="thing-device-id">Device ID</label></div>
+                    <div class="control"><input type="text" name="thing-device-id"></input></div>
+                    <div class="label"><label for="thing-vnode">VNode</label></div>
+                    <div class="control"><input type="text" name="thing-vnode"></input></div>
+                    <div class="label"><label for="thing-visible">Visible</label></div>
+                    <div class="control"><input type="checkbox" name="thing-visible"></input></div>
+                    <div class="label"><label for="thing-views">In Views</label></div>
+                    <div class="control"><select name="thing-views" multiple></select></div>
+                    <div class="label"><button name="button-accept">Save</button></div>
+                    <div class="control"><button name="button-reject">Discard</button></div>
+                </div>
             </div>
         </template>
         <template id="template-edit-view">

@@ -205,20 +205,72 @@ li#status, li#settings {
     bottom: 0;
 }
 
+.dialog-frame {
+    position: inherit;
+    display: block;
+}
+
 .dialog {
+    font-size: 12pt;
     color: var(--text);
     padding: 1rem;
     margin: 1rem;
     background-color: var(--bg);
     border: 1px solid var(--text);
-
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: left;
+    grid-row-gap: 5px;
+    grid-column-gap: 5px;
 }
 
-@media screen and (min-width: 600px) {
+.dialog .label {
+    display: inline-grid;
+}
+
+.dialog .control {
+    display: inline-grid;
+}
+
+input, button, select {
+    padding: 2px;
+    font-family: sans-serif;
+    font-size: 12pt;
+    outline: none;
+    background-color: var(--bg);
+    color: var(--text);
+    border: 1px solid rgb(99,99,99);
+}
+
+option:checked {
+    background-color: green/*var(--enabled)*/;
+    color: var(--bg)
+}
+
+input:focus, button:focus, select:focus {
+    outline: none;
+    color: var(--text);
+    border: 1px solid var(--text);
+    border-radius: 0;
+}
+
+.dialog button {
+    padding: 5px;
+    color: white;
+    background-color: rgb(14,14,14);
+    border-width: 1px;
+    border-style: solid;
+    border-left-color: rgb(21,21,21);
+    border-top-color: rgb(29,29,29);
+    border-right-color: rgb(13,13,13);
+    border-bottom-color: rgb(13,13,13);
+}
+
+/*@media screen and (min-width: 600px) {
     .dialog {
         margin: 10rem;
     }
-}
+}*/
 
 .dialog label {
     margin-right: 1rem;
@@ -229,8 +281,7 @@ li#status, li#settings {
     position: absolute;
     right: 0px;
     top: 0px;
-    padding: 5px;
-    display: none;
+    padding: 5px;    display: none;
 }
 
 .on .edit {
