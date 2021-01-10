@@ -9,6 +9,9 @@ const WS_CLOSED = 3;
 let socket = null;
 let things = {};
 
+let edit_mode_active = false;
+let current_overlay = null;
+
 let update_float_value = (e, f) => {
     let span = e.querySelector("span[name='value']");
     span.innerText = f.toString();
@@ -53,6 +56,46 @@ let cancel_pending_changes = (thing) => {
     pending_changes[thing.id] = [];
 };
 
+const show_thing_edit = (value) => {
+    edit_mode_active = value;
+    document.getElementById('settings').classList.toggle('active', value);
+    for(const elem of document.querySelectorAll('.edit')) {
+        elem.style.display = value ? 'block' : 'none';
+    }
+    if(value) {
+        for(const elem of document.querySelectorAll('.invisible')) {
+            elem.classList.remove('invisible');
+            elem.classList.add('invisible-edit');
+        }
+    } else {
+        for(const elem of document.querySelectorAll('.invisible-edit')) {
+            elem.classList.add('invisible');
+            elem.classList.remove('invisible-edit');
+        }
+    }
+
+    const thing_add = document.querySelector('.thing-add')
+    const things = document.getElementById("content");
+    if(value && !thing_add) {
+        const template = document.getElementById("template-add");
+        let e = template.content.cloneNode(true);
+        apply_feather(e);
+
+        e.querySelector('div.thing-detail').addEventListener('click', () => {
+            socket.send(JSON.stringify({
+                type: "create_or_edit",
+                id: null,
+            }));
+            show_thing_edit(false);
+        });
+
+        const things = document.getElementById("content");
+        things.appendChild(e);
+    } else if(!value && thing_add) {
+        things.removeChild(thing_add);
+    }
+};
+
 let checkbox_initializer = (thing, e) => {
     let div = e.querySelector("div.thing-detail");
     let checkbox = e.querySelector("input[type='checkbox']");
@@ -62,7 +105,7 @@ let checkbox_initializer = (thing, e) => {
     });
 
     let cb = () => {
-        
+
         console.log(div);
         socket.send(JSON.stringify({
             type: "command",
@@ -109,8 +152,23 @@ let create_thing_element = (thing) => {
     }
 
     let e = template.content.cloneNode(true);
-    const e_id = "thing-" + thing.id;
-    e.querySelector("div").id = e_id;
+    const e_id = "thing-" + thing.id
+    let thing_root = e.querySelector("div");
+    thing_root.id = e_id;
+    thing_root.classList.toggle('invisible', !thing.visible);
+
+    const edit = e.querySelector('.edit');
+    if(edit) {
+        edit.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            socket.send(JSON.stringify({
+                type: "create_or_edit",
+                id: thing.id,
+            }));
+            show_thing_edit(false);
+        });
+    }
 
     let name_span = e.querySelector("span[name='name']");
     if(name_span)
@@ -155,11 +213,7 @@ let show_view = (name) => {
     const view_things = views[name];
     for(let thing of document.querySelectorAll(".thing")) {
         const id = parseInt(thing.id.split("-")[1]);
-        if(view_things.includes(id)) {
-            thing.style.display = "";
-        } else {
-            thing.style.display = "none";
-        }
+        thing.classList.toggle('invisible', !view_things.includes(id) || !things[id].visible);
     }
     const current = document.querySelector("li.active");
     if(current)
@@ -196,8 +250,8 @@ const show_thing_edit_dialog = (data) => {
 
     const e = template.content.cloneNode(true);
 
-    e.querySelector('*[name=thing-name]').value = data.name;
-    e.querySelector('*[name=thing-id]').value = data.id;
+    const thing_name = e.querySelector('*[name=thing-name]'); thing_name.value = data.name;
+    const thing_id = e.querySelector('*[name=thing-id]'); thing_id.value = data.id;
     const type_select = e.querySelector('*[name=thing-type]');
     for(const entry of data.types) {
         const element = document.createElement('option');
@@ -206,9 +260,12 @@ const show_thing_edit_dialog = (data) => {
         element.selected = entry.value === data.thing_type;
         type_select.add(element);
     }
-    e.querySelector('*[name=thing-device-id]').value = data.device_id;
-    e.querySelector('*[name=thing-vnode]').value = data.vnode;
-    e.querySelector('*[name=thing-visible]').checked = data.visible;
+    if(data.device_id) {
+        type_select.disabled = true;
+    }
+    const thing_device_id = e.querySelector('*[name=thing-device-id]'); thing_device_id.value = data.device_id;
+    const thing_vnode = e.querySelector('*[name=thing-vnode]'); thing_vnode.value = data.vnode;
+    const thing_visible = e.querySelector('*[name=thing-visible]'); thing_visible.checked = data.visible;
     const views_select = e.querySelector('*[name=thing-views]');
     for(const entry of data.views) {
         const element = document.createElement('option');
@@ -217,11 +274,32 @@ const show_thing_edit_dialog = (data) => {
         element.selected = data.thing_views.find(element => element === entry.value);
         views_select.add(element);
     }
-    e.querySelector('button[name=button-accept]').addEventListener('click', () => console.log('accept'));
-    e.querySelector('button[name=button-reject]').addEventListener('click', () => console.log('reject'));
 
     const overlay = document.createElement('div');
     overlay.setAttribute('class', 'overlay');
+
+    e.querySelector('button[name=button-accept]').addEventListener('click', (btn) => {
+        btn.preventDefault();
+        socket.send(JSON.stringify({
+            type: "edit_save",
+            editing: "thing",
+            data: {
+                id: thing_id.value,
+                name: thing_name.value,
+                thing_type: type_select.value,
+                device_id: thing_device_id.value,
+                vnode: thing_vnode.value,
+                visible: thing_visible.checked,
+                views: Array.from(views_select.selectedOptions).map(o => ({value: o.value, text: o.text})),
+            },
+        }));
+    });
+    e.querySelector('button[name=button-reject]').addEventListener('click', (btn) => {
+        btn.preventDefault();
+        overlay.style.display = 'none';
+        overlay.parentNode.removeChild(overlay);
+    });
+
     overlay.appendChild(e);
 
     return overlay;
@@ -230,9 +308,16 @@ const show_thing_edit_dialog = (data) => {
 let handle_message = (data) => {
     if(data.type === "things") {
         data.things.forEach(thing => {
-            console.log("New thing", thing.name, "of type", thing.type);
-            if(thing.id in things && things[thing.id].element)
+            if(thing.id in things && things[thing.id].element) {
+                const e = document.getElementById('thing-' + thing.id);
+                e.querySelector('.thing-name span[name="name"]').innerText = thing.name;
+                const currentView = decodeURI(window.location.hash.substr(1));
+                e.classList.toggle("invisible", !views[currentView].includes(thing.id) || !thing.visible);
+
+                thing.element = e;
+                things[thing.id] = thing;
                 return;
+            }
             let element = create_thing_element(thing);
             thing.element = element;
             things[thing.id] = thing;
@@ -253,6 +338,7 @@ let handle_message = (data) => {
 
         for(let [name, things] of Object.entries(data.views)) {
             let li = document.createElement("li");
+            li.id = "view-" + name;
             li.classList.add("menu-item");
             li.classList.add("thing-view");
             let a = document.createElement("a");
@@ -260,9 +346,8 @@ let handle_message = (data) => {
             a.innerText = name;
             li.appendChild(a);
             li.addEventListener("click", () => { show_view(name);})
-            views[name] = things;
-
             document.querySelector("#bar").appendChild(li);
+            views[name] = things;
         }
         let saved_view = decodeURI(window.location.hash.substr(1));
         if(!saved_view)
@@ -307,9 +392,13 @@ let handle_message = (data) => {
         }
         current_last_seen_timeout_id = setTimeout(get_last_seen, get_last_seen_interval);
     } else if(data.type == "edit_data") {
-        console.log("edit_data", data)
-        const elem = show_thing_edit_dialog(data.data);
-        document.getElementsByTagName('body')[0].appendChild(elem);
+        if(data.kind == "thing") {
+            current_overlay = show_thing_edit_dialog(data.data);
+            document.getElementsByTagName('body')[0].appendChild(current_overlay);
+        }
+    } else if(data.type == "edit_ok" && current_overlay) {
+        current_overlay.parentNode.removeChild(current_overlay);
+        current_overlay = null;
     }
 };
 
@@ -337,7 +426,7 @@ let ws_connect = () => {
 
     socket.addEventListener("open", function(event) {
         console.log("Connected");
-        set_status('<svg class="feather"><use href="img/feather-sprite.svg#cloud"/></svg>');
+        set_status('<svg class="feather feather-fill"><use href="img/feather-sprite.svg#cloud"/></svg>');
         reconnect_attempt = 0;
 
         if(current_last_seen_timeout_id) {
@@ -347,9 +436,9 @@ let ws_connect = () => {
 
         get_last_seen();
     });
-    
+
     socket.addEventListener("close", function(event) {
-        set_status('<svg class="feather"><use href="img/feather-sprite.svg#cloud-off"/></svg>');
+        set_status('<svg class="feather feather-fill"><use href="img/feather-sprite.svg#cloud-off"/></svg>');
 
         if(document.hidden) {
             return;
@@ -362,11 +451,11 @@ let ws_connect = () => {
         setTimeout(() => {
             ws_connect();
         }, time);
-        
+
         if(reconnect_attempt < (60*5)-1)
             reconnect_attempt += 1;
     });
-    
+
     socket.addEventListener("message", function(event) {
         const data = JSON.parse(event.data);
         handle_message(data);
@@ -375,6 +464,8 @@ let ws_connect = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     ws_connect();
+    apply_feather(document.querySelector('#settings'));
+    apply_feather(document.querySelector('#menu-toggle'));
     document.querySelector(".toggle a").addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelectorAll(".menu-item").forEach((item) => {
@@ -386,10 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
     document.querySelector('#settings').addEventListener('click', (e) => {
-        socket.send(JSON.stringify({
-            type: "create_or_edit",
-            id: null,
-        }));
+        show_thing_edit(!edit_mode_active);
     });
 });
 

@@ -2,6 +2,7 @@
     --bg:  rgb(47,47,47);
     --text: rgb(198,213,210);
     --enabled: rgb(66, 187, 243);
+    --bg-edit: gray;
 }
 
 html {
@@ -27,6 +28,7 @@ html {
     color: var(--text);
     display: inline-block;
     width: 7rem;
+    user-select: none;
 }
 
 .thing-detail {
@@ -41,12 +43,12 @@ html {
 .timed-out .thing-name span[name="name"]::after {
     color: red;
     font-weight: bolder;
-    content: " !";
+    content: "\00a0!";
 }
 
 .timeout-unknown .thing-name span[name="name"]::after {
     color: orange;
-    content: " ?";
+    content: "\00a0?";
 }
 
 .thing-value {
@@ -173,7 +175,11 @@ li#status, li#settings {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  fill: var(--text);
+  fill: none;
+}
+
+.feather-fill {
+    fill: var(--text) !important; 
 }
 
 .feather-big {
@@ -216,4 +222,27 @@ li#status, li#settings {
 
 .dialog label {
     margin-right: 1rem;
+}
+
+.edit {
+    color: var(--text);
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    padding: 5px;
+    display: none;
+}
+
+.on .edit {
+    color: var(--bg);
+}
+
+.invisible {
+    display: none !important;
+}
+
+.invisible-edit .thing-detail, .thing-add .thing-detail {
+    /*border-style: dashed;*/
+    background: var(--bg-edit);
+    color: var(--text);
 }
