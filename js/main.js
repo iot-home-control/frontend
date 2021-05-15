@@ -33,6 +33,8 @@ let clear_pending_indicator = (e) => {
 const updaters = {
     temperature: (e, s, b, f) => { update_float_value(e, f); },
     humidity: (e, s, b, f) => { update_float_value(e, f); },
+    shelly_temperature: (e, s, b, f) => { update_float_value(e, f); },
+    shelly_humidity: (e, s, b, f) => { update_float_value(e, f); },
     soilmoisture: (e, s, b, f) => { update_float_value(e, f); },
     pressure: (e, s, b, f) => { update_float_value(e, f); },
     shelly: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
