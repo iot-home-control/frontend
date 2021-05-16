@@ -402,6 +402,8 @@ let handle_message = (data) => {
     } else if(data.type == "edit_ok" && current_overlay) {
         current_overlay.parentNode.removeChild(current_overlay);
         current_overlay = null;
+    } else if(data.type == "cookie") {
+        document.cookie = `${data.name}=${data.value}`
     }
 };
 
