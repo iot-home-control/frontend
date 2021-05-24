@@ -308,6 +308,66 @@ const show_thing_edit_dialog = (data) => {
     return overlay;
 }
 
+const show_login_dialog = (data) => {
+    const template = document.getElementById("template-login");
+    if(!template) {
+        return null;
+    }
+
+    const e = template.content.cloneNode(true);
+
+    const username_input = e.querySelector('*[name=username]');
+    const password_input = e.querySelector('*[name=password]');
+
+    const overlay = document.createElement('div');
+    overlay.setAttribute('class', 'overlay');
+
+    e.querySelector('button[name=button-accept]').addEventListener('click', (btn) => {
+        btn.preventDefault();
+        authenticate(username_input.value, password_input.value)
+    });
+    e.querySelector('button[name=button-reject]').addEventListener('click', (btn) => {
+        btn.preventDefault();
+        overlay.style.display = 'none';
+        overlay.parentNode.removeChild(overlay);
+    });
+
+    overlay.appendChild(e);
+    return overlay;
+}
+
+let authenticate = (username, password) => {
+    socket.send(JSON.stringify({
+        type: "authenticate",
+        username: username,
+        password: password,
+    }));
+}
+
+const flash = (heading, text, actions) => {
+    const root = document.createElement("div")
+    root.classList.add("flash")
+
+    const headingElement = document.createElement("span")
+    headingElement.innerText = heading
+
+    const textElement = document.createElement("span")
+    textElement.innerText = text
+
+    const closeButton = document.createElement("button")
+    closeButton.textContent = "X"
+    closeButton.addEventListener("click", (e) => {
+        root.style.display = "none"
+        root.parentElement.removeChild(root)
+    })
+
+    root.appendChild(headingElement)
+    root.appendChild(textElement)
+    root.appendChild(closeButton)
+
+    document.body.appendChild(root)
+}
+
 let handle_message = (data) => {
     if(data.type === "things") {
         data.things.forEach(thing => {
@@ -394,16 +454,28 @@ let handle_message = (data) => {
             }
         }
         current_last_seen_timeout_id = setTimeout(get_last_seen, get_last_seen_interval);
-    } else if(data.type == "edit_data") {
-        if(data.kind == "thing") {
+    } else if(data.type === "edit_data") {
+        if(data.kind === "thing") {
             current_overlay = show_thing_edit_dialog(data.data);
             document.getElementsByTagName('body')[0].appendChild(current_overlay);
         }
-    } else if(data.type == "edit_ok" && current_overlay) {
+    } else if(data.type === "edit_ok" && current_overlay) {
         current_overlay.parentNode.removeChild(current_overlay);
         current_overlay = null;
-    } else if(data.type == "cookie") {
+    } else if(data.type === "cookie") {
         document.cookie = `${data.name}=${data.value}`
+    } else if(data.type === "auth_required") {
+        current_overlay = show_login_dialog();
+        document.getElementsByTagName('body')[0].appendChild(current_overlay);
+    } else if(data.type === "auth_ok") {
+        if(current_overlay) {
+            current_overlay.parentNode.removeChild(current_overlay);
+            current_overlay = null;
+        }
+    } else if(data.type === "auth_failed") {
+
+    } else {
+        console.log("Unimplemented message type", data)
     }
 };
 
@@ -414,7 +486,7 @@ let set_status = (msg) => {
 };
 
 let get_last_seen = () => {
-    if(socket.readyState != WS_OPEN) {
+    if(socket.readyState !== WS_OPEN) {
         return;
     }
 

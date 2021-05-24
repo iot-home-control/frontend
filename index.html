@@ -34,9 +34,19 @@
             </div>
         </template>
         <template id="template-edit-view">
-            <input type="hidden" name="view-id"></input>
-            <label for="view-name">Name</label><input type="text" name="view-name"></input><br/>
+            <input type="hidden" name="view-id">
+            <label for="view-name">Name</label><input type="text" name="view-name"><br/>
             <label for="view-things">Things</label><select name="view-things" multiple></select><br/>
+        </template>
+        <template id="template-login">
+            <div class="dialog-frame">
+                <div class="dialog dialog-login">
+                    <label for="username">Username<input type="text" name="username"/></label><br/>
+                    <label for="password">Password<input name="password" type="password"/></label><br/>
+                    <div class="control"><button name="button-accept">Login</button></div>
+                    <div class="control"><button name="button-reject">Cancel</button></div>
+                </div>
+            </div>
         </template>
         <template id="template-temperature">
             <div class="thing thing-temperature">
