@@ -44,13 +44,13 @@ html {
 }
 
 .timed-out .thing-name span[name="name"]::after {
-    color: red;
+    color: var(--error);
     font-weight: bolder;
     content: "\00a0!";
 }
 
 .timeout-unknown .thing-name span[name="name"]::after {
-    color: orange;
+    color: var(--warning);
     content: "\00a0?";
 }
 
@@ -150,7 +150,7 @@ ul#bar {
     background-color: var(--enabled);
 }
 
-li#status, li#settings {
+li#status, li#settings, li#logout, li#login{
     display: block;
     color: var(--text);
     text-align: center;
@@ -246,7 +246,7 @@ input, button, select {
 }
 
 option:checked {
-    background-color: green/*var(--enabled)*/;
+    background-color: var(--enabled);
     color: var(--bg)
 }
 

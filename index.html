@@ -41,9 +41,11 @@
         <template id="template-login">
             <div class="dialog-frame">
                 <div class="dialog dialog-login">
-                    <label for="username">Username<input type="text" name="username"/></label><br/>
-                    <label for="password">Password<input name="password" type="password"/></label><br/>
-                    <div class="control"><button name="button-accept">Login</button></div>
+                    <div class="label"><label for="username">Username</label></div>
+                    <div class="control"><input type="text" name="username"/></div>
+                    <div class="label"><label for="password">Password</label></div>
+                    <div class="control"><input name="password" type="password"/></div>
+                    <div class="label"><button name="button-accept">Login</button></div>
                     <div class="control"><button name="button-reject">Cancel</button></div>
                 </div>
             </div>
@@ -157,6 +159,8 @@
                     <li id="menu-toggle" class="toggle"><a><i class="feather" data-feather="menu"></i></a></li>
                     <li id="settings"><span><i class="feather" data-feather="settings"></i></span></li>
                     <li id="status"></li>
+                    <li id="login"><span><i class="feather" data-feather="log-in"></i></span></li>
+                    <li id="logout" class="invisible"><span><i class="feather" data-feather="log-out"></i></span></li>
                 </ul>
             </div>
         </div>

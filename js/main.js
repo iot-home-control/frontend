@@ -482,18 +482,31 @@ let handle_message = (data) => {
     } else if(data.type === "edit_ok" && current_overlay) {
         current_overlay.parentNode.removeChild(current_overlay);
         current_overlay = null;
+        flash("Thing successfully saved.")
     } else if(data.type === "cookie") {
-        document.cookie = `${data.name}=${data.value}`
+        document.cookie = `auth=${data.value}`
     } else if(data.type === "auth_required") {
-        current_overlay = show_login_dialog();
-        document.getElementsByTagName('body')[0].appendChild(current_overlay);
+        flash("You need to login to use this function.", "error", [{text: "Login", action: () => {
+            current_overlay = show_login_dialog();
+            document.getElementsByTagName('body')[0].appendChild(current_overlay);
+        }}]);
     } else if(data.type === "auth_ok") {
         if(current_overlay) {
             current_overlay.parentNode.removeChild(current_overlay);
             current_overlay = null;
+            flash("Login succeded.")
         }
+        document.getElementById("login").classList.toggle("invisible", true);
+        document.getElementById("logout").classList.toggle("invisible", false);
     } else if(data.type === "auth_failed") {
-
+        if(current_overlay) {
+            current_overlay.parentNode.removeChild(current_overlay);
+            current_overlay = null;
+        }
+        flash("Login failed.", "error", [{text: "Login", action: () => {
+            current_overlay = show_login_dialog();
+            document.getElementsByTagName('body')[0].appendChild(current_overlay);
+        }}])
     } else {
         console.log("Unimplemented message type", data)
     }
@@ -561,8 +574,7 @@ let ws_connect = () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     ws_connect();
-    apply_feather(document.querySelector('#settings'));
-    apply_feather(document.querySelector('#menu-toggle'));
+    apply_feather(document.querySelector('#bar'));
     document.querySelector(".toggle a").addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelectorAll(".menu-item").forEach((item) => {
@@ -575,6 +587,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.querySelector('#settings').addEventListener('click', (e) => {
         show_thing_edit(!edit_mode_active);
+    });
+    document.querySelector('#login').addEventListener('click', (e) => {
+        current_overlay = show_login_dialog();
+        document.getElementsByTagName('body')[0].appendChild(current_overlay);
+    });
+    document.querySelector('#logout').addEventListener('click', (e) => {
+        document.cookie = "auth=";
+        location.reload()
     });
 });
 
