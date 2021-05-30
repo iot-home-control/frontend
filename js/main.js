@@ -344,28 +344,47 @@ let authenticate = (username, password) => {
     }));
 }
 
-const flash = (heading, text, actions) => {
+const flash = (message, type="success", actions=[]) => {
     const root = document.createElement("div")
     root.classList.add("flash")
+    root.classList.add("flash-" + type)
 
-    const headingElement = document.createElement("span")
-    headingElement.innerText = heading
+    const messageElement = document.createElement("span")
+    messageElement.innerText = message
+    messageElement.classList.add("flash-message")
 
-    const textElement = document.createElement("span")
-    textElement.innerText = text
-
-    const closeButton = document.createElement("button")
-    closeButton.textContent = "X"
-    closeButton.addEventListener("click", (e) => {
+    const closeFlash = () => {
         root.style.display = "none"
         root.parentElement.removeChild(root)
-    })
+    }
 
-    root.appendChild(headingElement)
-    root.appendChild(textElement)
+    const closeButton = document.createElement("button")
+    closeButton.addEventListener("click", closeFlash)
+    closeButton.classList.add("flash-close-button")
+    closeButton.innerHTML = '<i class="feather" data-feather="x"></i>'
+
+    root.appendChild(messageElement)
+
+    if(actions) {
+        actions.forEach((action) => {
+            const button = document.createElement("button")
+            button.addEventListener("click", (e) => {
+                if(action.action)
+                    action.action()
+                closeFlash()
+            })
+            if(action.feather) {
+                button.innerHTML = `<i class="feather" data-feather="${action.feather}"></i>` + action.text
+            } else {
+                button.textContent = action.text
+            }
+            root.appendChild(button)
+        })
+    }
     root.appendChild(closeButton)
+    apply_feather(root)
 
-    document.body.appendChild(root)
+    document.getElementById("flash").appendChild(root)
 }
 
 let handle_message = (data) => {

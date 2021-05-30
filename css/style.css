@@ -2,6 +2,9 @@
     --bg:  rgb(47,47,47);
     --text: rgb(198,213,210);
     --enabled: rgb(66, 187, 243);
+    --error: rgb(255, 12, 0);
+    --success: rgb(76, 242, 92);
+    --warning: rgb(243, 217, 0);
     --bg-edit: gray;
 }
 
@@ -298,7 +301,47 @@ input:focus, button:focus, select:focus {
     color: var(--text);
 }
 
+.flash-warning {
+    background-color: var(--warning);
+    color: var(--bg)
+}
+
+.flash-success {
+    background-color: var(--success);
+    color: var(--bg)
+}
+
+.flash-error {
+    background-color: var(--error);
+    color: var(--text)
+}
+
 .flash {
-    background-color: red;
+    padding: 1rem;
     display: block;
+    z-index: 1;
+    top: 1rem;
+    width: 75%;
+    margin: 0.25rem auto;
+    border-radius: 5px;
+}
+
+.flash-close-button {
+    float: right;
+    font-weight: bold;
+}
+
+.flash button {
+    background-color: inherit;
+    color: inherit;
+    border: none;
+    text-decoration: underline;
+}
+
+.flash button:hover {
+    color: white
+}
+
+.flash-message {
+    padding-right: 0.5rem;
 }
