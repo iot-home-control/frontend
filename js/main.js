@@ -411,7 +411,8 @@ let handle_message = (data) => {
                 return;
             }
             let thing = things[state.thing_id];
-            update_thing_state(thing, state);
+            if(thing)
+                update_thing_state(thing, state);
         });
     } else if(data.type === "views") {
         document.querySelectorAll(".thing-view").forEach((e) => { e.remove() });
