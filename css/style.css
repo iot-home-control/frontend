@@ -195,6 +195,20 @@ li#status, li#settings, li#logout, li#login{
   fill: none;
 }
 
+.center-outer {
+    float: right;
+    right: 50%;
+    position: relative;
+}
+.center-inner {
+    float: right;
+    right: -50%;
+    position: relative;
+}
+.center-clear {
+    clear: both;
+}
+
 .overlay {
     /*width: 100%;*/
     z-index: 1;

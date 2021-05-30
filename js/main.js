@@ -109,7 +109,7 @@ let checkbox_initializer = (thing, e) => {
 
     let cb = () => {
 
-        console.log(div);
+        //console.log(div);
         socket.send(JSON.stringify({
             type: "command",
             id: thing.id,
