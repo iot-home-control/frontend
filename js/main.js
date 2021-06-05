@@ -484,7 +484,7 @@ let handle_message = (data) => {
         current_overlay = null;
         flash("Thing successfully saved.")
     } else if(data.type === "cookie") {
-        document.cookie = `auth=${data.value}`
+        document.cookie = `auth=${data.value};max-age=${data.max_age}`
     } else if(data.type === "auth_required") {
         flash("You need to login to use this function.", "error", [{text: "Login", action: () => {
             current_overlay = show_login_dialog();
