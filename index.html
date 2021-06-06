@@ -44,14 +44,14 @@
         <template id="template-login">
             <div class="center-outer">
                 <div class="dialog-frame center-inner">
-                    <div class="dialog dialog-login">
+                    <form class="dialog dialog-login">
                         <div class="label"><label for="username">Username</label></div>
                         <div class="control"><input type="text" name="username"/></div>
                         <div class="label"><label for="password">Password</label></div>
                         <div class="control"><input name="password" type="password"/></div>
-                        <div class="label"><button name="button-accept">Login</button></div>
-                        <div class="control"><button name="button-reject">Cancel</button></div>
-                    </div>
+                        <div class="label"><button type="button" name="button-reject">Cancel</button></div>
+                        <div class="control"><button type="submit" name="button-accept">Login</button></div>
+                    </form>
                 </div>
             </div>
             <div class="center-clear"></div>
