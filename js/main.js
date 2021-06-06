@@ -499,8 +499,10 @@ let handle_message = (data) => {
             current_overlay = null;
             flash("Login succeded.")
         }
-        document.getElementById("login").classList.toggle("invisible", true);
-        document.getElementById("logout").classList.toggle("invisible", false);
+        const authenticated = data.level >= 2
+        document.getElementById("login").classList.toggle("invisible", authenticated);
+        document.getElementById("logout").classList.toggle("invisible", !authenticated);
+        document.getElementById("settings").classList.toggle("invisible", !authenticated);
     } else if(data.type === "auth_failed") {
         if(current_overlay) {
             current_overlay.parentNode.removeChild(current_overlay);
