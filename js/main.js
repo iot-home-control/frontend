@@ -308,7 +308,7 @@ const show_thing_edit_dialog = (data) => {
     return overlay;
 }
 
-const show_login_dialog = (data) => {
+const make_login_dialog = (data) => {
     const template = document.getElementById("template-login");
     if(!template) {
         return null;
@@ -334,6 +334,12 @@ const show_login_dialog = (data) => {
 
     overlay.appendChild(e);
     return overlay;
+}
+
+const show_login_dialog = () => {
+    current_overlay = make_login_dialog();
+    document.getElementsByTagName('body')[0].appendChild(current_overlay);
+    current_overlay.querySelector('*[name=username]').focus()
 }
 
 let authenticate = (username, password) => {
@@ -486,10 +492,7 @@ let handle_message = (data) => {
     } else if(data.type === "cookie") {
         document.cookie = `auth=${data.value};max-age=${data.max_age}`
     } else if(data.type === "auth_required") {
-        flash("You need to login to use this function.", "error", [{text: "Login", action: () => {
-            current_overlay = show_login_dialog();
-            document.getElementsByTagName('body')[0].appendChild(current_overlay);
-        }}]);
+        flash("You need to login to use this function.", "error", [{text: "Login", action: show_login_dialog}]);
     } else if(data.type === "auth_ok") {
         if(current_overlay) {
             current_overlay.parentNode.removeChild(current_overlay);
@@ -503,10 +506,7 @@ let handle_message = (data) => {
             current_overlay.parentNode.removeChild(current_overlay);
             current_overlay = null;
         }
-        flash("Login failed.", "error", [{text: "Login", action: () => {
-            current_overlay = show_login_dialog();
-            document.getElementsByTagName('body')[0].appendChild(current_overlay);
-        }}])
+        flash("Login failed.", "error", [{text: "Login", action: show_login_dialog}])
     } else {
         console.log("Unimplemented message type", data)
     }
@@ -588,10 +588,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector('#settings').addEventListener('click', (e) => {
         show_thing_edit(!edit_mode_active);
     });
-    document.querySelector('#login').addEventListener('click', (e) => {
-        current_overlay = show_login_dialog();
-        document.getElementsByTagName('body')[0].appendChild(current_overlay);
-    });
+    document.querySelector('#login').addEventListener('click', show_login_dialog);
     document.querySelector('#logout').addEventListener('click', (e) => {
         document.cookie = "auth=";
         location.reload()
