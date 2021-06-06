@@ -66,12 +66,12 @@ const show_thing_edit = (value) => {
         elem.style.display = value ? 'block' : 'none';
     }
     if(value) {
-        for(const elem of document.querySelectorAll('.invisible')) {
+        for(const elem of document.querySelectorAll('#content.invisible')) {
             elem.classList.remove('invisible');
             elem.classList.add('invisible-edit');
         }
     } else {
-        for(const elem of document.querySelectorAll('.invisible-edit')) {
+        for(const elem of document.querySelectorAll('#content.invisible-edit')) {
             elem.classList.add('invisible');
             elem.classList.remove('invisible-edit');
         }
