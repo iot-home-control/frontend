@@ -9,19 +9,23 @@ Home Control has 3 Components
 
 The Home Control Web Frontend shows a list of things (T of IOT). It can show the current state of a thing.
 If a thing has actions, you can trigger these actions via the Web Frontend.
+
 ![Screenshot of the Web Frontend](doc/demo.png)
 ## Installation Guide
 ### Requirements
 To install the frontend you just need a webserver capable of serving static files (ideally with HTTPs).
 
 ### Setup
-In the following we assume `/opt/home-control/frontend` to be the installation location and non-absolute paths will be assumed relative to this directory.
+In the following we assume all non-absolute paths will be relative to the installation directory.
+All our examples assume `/opt/home-control/frontend` to be the installation location.
 
 1. Unpack the downloaded release file (or clone this repository) to the installation directory.
 1. Create a config file for the Home Control frontend (you can copy `js/config.example.js` to `js/config.js` for a quick start) and fill it out.
    See [the configuration section](#Configuration) for more information.
 1. Configure your webserver to serve the frontend.
    You can have a look at the example [nginx configuration snippet](../system-backend/examples/nginx-home-control-snippet.conf) in the backend repository.
+   **Important:** You need a working TLS setup.
+   Without TLS you won't be able to login and add/configure things.
 
 ### Configuration
 The configuration file must define a `config` object with the following (optional) properties.
@@ -86,7 +90,7 @@ If a device has multiple actors (e.g., relays) or sensors (e.g., temperature and
 See details for Home Control firmware in its documentation, and for Shelly devices in [their documentation](https://shelly-api-docs.shelly.cloud/).
 
 ## Licensing
-While the Home Control frontend itself is licensed under the [GNU AGPL 3](LICENSE) it uses the following 3rd party libraries/files which have different licenses:
+While the Home Control frontend itself is licensed under the [GNU AGPL 3](LICENSE) this repository also contains the following 3rd party libraries/files which have different licenses:
 - `css/tooltip.css`, `js/tooltip.js`: MIT License, Copyright (c) 2016 Arshad Khan
 - `img/feather-sprite.svg`: MIT License, Copyright (c) 2013-2017 Cole Bemis
 - `img/logo.svg`, and rasterized version of it in the same folder: CC BY-SA 4.0, Hinrikus Wolf
