@@ -1,4 +1,25 @@
-let config = {
-    ws_url: "wss://home-control.domain.tld/ws",
-    //ws_url: "ws://localhost:8765",
+/*
+    In this configuration file you must configure your backend location.
+    All parts except "ws_path" are optional and can be left out or explicitly set to undefined.
+    Undefined parts will be inferred from browsers window.location showing the frontend to allow to allow for,
+    e.g. different hostnames depending on how the frontend is accessed.
+*/
+const config = {
+    ws_proto: undefined,
+    ws_host: "home-control.example.tld",
+    ws_port: undefined,
+    ws_path: "/ws",
 };
+
+/*
+    This is an example config for directly connecting to the system-backend on localhost (with the default port).
+    This is useful for development without a TLS setup (which works except for authentication).
+*/
+/*
+const config = {
+    ws_proto: "ws:",
+    ws_host: "localhost",
+    ws_port: 8765,
+    ws_path: "/",
+};
+*/

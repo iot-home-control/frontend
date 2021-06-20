@@ -534,7 +534,16 @@ let reconnect_attempt = 0;
 let current_last_seen_timeout_id = null;
 
 let ws_connect = () => {
-    socket = new WebSocket(config.ws_url);
+    const make_ws_url = () => {
+        const l = window.location;
+        const c = config;
+        return (c.ws_proto || l.protocol.replace("http", "ws")) + "//"
+            + (c.ws_host || l.host)
+            + ((c.ws_port ? ":" + c.ws_port : undefined) || (l.port ? ":" + l.port : ""))
+            + c.ws_path;
+    };
+
+    socket = new WebSocket(make_ws_url());
 
     socket.addEventListener("open", function(event) {
         console.log("Connected");
