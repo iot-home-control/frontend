@@ -3,7 +3,7 @@
 Home Control is a no-cloud Internet of Things solution. 
 
 Home Control has 3 Components
-- the [System Backend](../system-backend/README.md) 
+- the [System Backend](https://github.com/iot-home-control/system-backend)
 - the Web Frontend (this repository)
 - the firmware (to be releases)
 
