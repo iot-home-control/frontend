@@ -166,7 +166,7 @@ ul#bar {
     background-color: var(--enabled);
 }
 
-li#status, li#settings, li#logout, li#login{
+li#status, li#settings, li#logout, li#login, li#rules{
     display: block;
     color: var(--text);
     text-align: center;

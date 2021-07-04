@@ -23,7 +23,7 @@
                         <div class="control"><select name="thing-type"></select></div>
                         <div class="label"><label for="thing-device-id">Device ID</label></div>
                         <div class="control"><input type="text" name="thing-device-id"></input></div>
-                        <div class="label"><label for="thing-vnode">VNode</label></div>
+                        <div class="label"><label for="thing-vnode">VNode<apply_feather(root)/label></div>
                         <div class="control"><input type="text" name="thing-vnode"></input></div>
                         <div class="label"><label for="thing-visible">Visible</label></div>
                         <div class="control"><input type="checkbox" name="thing-visible"></input></div>
@@ -52,6 +52,16 @@
                         <div class="label"><button type="button" name="button-reject">Cancel</button></div>
                         <div class="control"><button type="submit" name="button-accept">Login</button></div>
                     </form>
+                </div>
+            </div>
+            <div class="center-clear"></div>
+        </template>
+        <template id="template-dynamic-dialog">
+            <div class="center-outer">
+                <div class="dialog-frame center-inner">
+                    <div class="dialog">
+                    <!-- Put content here. Via JS. -->
+                    </div>
                 </div>
             </div>
             <div class="center-clear"></div>
@@ -167,6 +177,7 @@
                     <li id="status"></li>
                     <li id="login"><span><i class="feather" data-feather="log-in"></i></span></li>
                     <li id="logout" class="invisible"><span><i class="feather" data-feather="log-out"></i></span></li>
+                    <li id="rules" class="invisible"><span><i class="feather" data-feather="list"></i></span></li>
                 </ul>
             </div>
         </div>

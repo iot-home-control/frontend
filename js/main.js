@@ -367,6 +367,74 @@ let authenticate = (username, password) => {
     }));
 }
 
+let close_dialog = () => {
+    current_overlay.parentNode.removeChild(current_overlay);
+    current_overlay = null;
+}
+
+
+let show_rules = () => {
+    socket.send(JSON.stringify({
+        type: "rules"}))
+}
+
+
+let update_rule_state = (rule_name, state) => {
+    socket.send(JSON.stringify({
+        type: "rules",
+        data: {[rule_name]: {enabled: state}}
+    }))
+}
+
+let show_rules_dialog = (data) => {
+    const template = document.getElementById("template-dynamic-dialog");
+    if(!template) {
+        console.warn("No dialog template found.");
+        return null;
+    }
+
+    const dialog = template.content.cloneNode(true);
+    const content = dialog.querySelector(".dialog")
+
+    const list = document.createElement("ul")
+    data.forEach((rule) => {
+        const item = document.createElement("li")
+        const label = document.createElement("label")
+        const checkbox = document.createElement("input")
+        checkbox.type = "checkbox"
+        checkbox.name = rule.name
+        checkbox.checked = rule.state
+        checkbox.addEventListener("change", () => {
+            const new_state = checkbox.checked
+            const rule_name = checkbox.name
+            console.log("New rule state ", rule_name, new_state)
+            update_rule_state(rule_name, new_state);
+        });
+        label.innerText = rule.name
+        label.htmlFor = checkbox.name
+        item.appendChild(label)
+        item.appendChild(checkbox)
+        list.appendChild(item)
+        console.log(rule.name, rule.state)
+    });
+    content.appendChild(list)
+    const closeButton = document.createElement("button")
+    closeButton.addEventListener("click", close_dialog)
+    closeButton.classList.add("flash-close-button")
+    closeButton.innerHTML = '<i class="feather" data-feather="x"></i>'
+    content.appendChild(closeButton)
+    const overlay = document.createElement('div');
+    overlay.setAttribute('class', 'overlay');
+    overlay.appendChild(dialog)
+    apply_feather(overlay)
+    let is_current_overlay = current_overlay
+    current_overlay = overlay
+    if(!is_current_overlay){
+        document.getElementsByTagName('body')[0].appendChild(current_overlay);
+    }
+
+}
+
 const flash = (message, type="success", actions=[]) => {
     const root = document.createElement("div")
     root.classList.add("flash")
@@ -520,12 +588,18 @@ let handle_message = (data) => {
         document.getElementById("login").classList.toggle("invisible", authenticated);
         document.getElementById("logout").classList.toggle("invisible", !authenticated);
         document.getElementById("settings").classList.toggle("invisible", !authenticated);
+        document.getElementById("rules").classList.toggle("invisible", !authenticated);
     } else if(data.type === "auth_failed") {
         if(current_overlay) {
             current_overlay.parentNode.removeChild(current_overlay);
             current_overlay = null;
         }
         flash("Login failed.", "error", [{text: "Login", action: show_login_dialog}])
+    } else if(data.type === "rules") {
+        show_rules_dialog(data.value)
+        //if(!current_overlay) {
+        //    current_overlay = show_rules_dialog(data.value)
+        //}
     } else {
         console.log("Unimplemented message type", data)
     }
@@ -621,6 +695,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.cookie = "auth=";
         location.reload()
     });
+    document.querySelector('#rules').addEventListener('click', (e) => {
+        show_rules()
+    })
 });
 
 document.addEventListener('visibilitychange', () => {
