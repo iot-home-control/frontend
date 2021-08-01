@@ -374,6 +374,8 @@ let close_dialog = () => {
 
 
 let show_rules = () => {
+    current_overlay = show_rules_dialog(undefined)
+    document.getElementsByTagName('body')[0].appendChild(current_overlay);
     socket.send(JSON.stringify({
         type: "rules"}))
 }
@@ -386,6 +388,42 @@ let update_rule_state = (rule_name, state) => {
     }))
 }
 
+let update_rules_dialog = (data) => {
+    const content = document.querySelector(".dialog")
+    const close_button = content.querySelector("button")
+    data.forEach((rule) => {
+        const rule_checkbox = content.querySelector(`input[name="${rule.name}"]`)
+        if(rule_checkbox) {
+            rule_checkbox.checked = rule.state;
+        } else {
+    //<div class="label"><label for="thing-name">Name</label></div>
+    //<div class="control"><input type="text" name="thing-name"></input></div>
+            const label_div = document.createElement("div")
+            label_div.classList.add("label")
+            const control_div = document.createElement("div")
+            control_div.classList.add("control")
+
+            const label = document.createElement("label")
+            const checkbox = document.createElement("input")
+            checkbox.type = "checkbox"
+            checkbox.name = rule.name
+            checkbox.checked = rule.state
+            checkbox.addEventListener("change", () => {
+                const new_state = checkbox.checked
+                const rule_name = checkbox.name
+                console.log("New rule state ", rule_name, new_state)
+                update_rule_state(rule_name, new_state);
+            });
+            label.innerText = rule.name
+            label.htmlFor = checkbox.name
+            label_div.appendChild(label)
+            control_div.appendChild(checkbox)
+            content.insertBefore(label_div, close_button)
+            content.insertBefore(control_div, close_button)
+        }
+    });
+};
+
 let show_rules_dialog = (data) => {
     const template = document.getElementById("template-dynamic-dialog");
     if(!template) {
@@ -395,44 +433,23 @@ let show_rules_dialog = (data) => {
 
     const dialog = template.content.cloneNode(true);
     const content = dialog.querySelector(".dialog")
+    const heading = document.createElement("span")
+    heading.innerHTML = "<b>Rules</b>"
+    heading.classList.add("single")
+    content.appendChild(heading)
 
-    const list = document.createElement("ul")
-    data.forEach((rule) => {
-        const item = document.createElement("li")
-        const label = document.createElement("label")
-        const checkbox = document.createElement("input")
-        checkbox.type = "checkbox"
-        checkbox.name = rule.name
-        checkbox.checked = rule.state
-        checkbox.addEventListener("change", () => {
-            const new_state = checkbox.checked
-            const rule_name = checkbox.name
-            console.log("New rule state ", rule_name, new_state)
-            update_rule_state(rule_name, new_state);
-        });
-        label.innerText = rule.name
-        label.htmlFor = checkbox.name
-        item.appendChild(label)
-        item.appendChild(checkbox)
-        list.appendChild(item)
-        console.log(rule.name, rule.state)
-    });
-    content.appendChild(list)
     const closeButton = document.createElement("button")
+    closeButton.classList.add("single");
     closeButton.addEventListener("click", close_dialog)
-    closeButton.classList.add("flash-close-button")
-    closeButton.innerHTML = '<i class="feather" data-feather="x"></i>'
+    closeButton.innerHTML = 'Close'
     content.appendChild(closeButton)
+
     const overlay = document.createElement('div');
     overlay.setAttribute('class', 'overlay');
     overlay.appendChild(dialog)
     apply_feather(overlay)
-    let is_current_overlay = current_overlay
-    current_overlay = overlay
-    if(!is_current_overlay){
-        document.getElementsByTagName('body')[0].appendChild(current_overlay);
-    }
 
+    return overlay;
 }
 
 const flash = (message, type="success", actions=[]) => {
@@ -596,10 +613,7 @@ let handle_message = (data) => {
         }
         flash("Login failed.", "error", [{text: "Login", action: show_login_dialog}])
     } else if(data.type === "rules") {
-        show_rules_dialog(data.value)
-        //if(!current_overlay) {
-        //    current_overlay = show_rules_dialog(data.value)
-        //}
+        update_rules_dialog(data.value)
     } else {
         console.log("Unimplemented message type", data)
     }

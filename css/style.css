@@ -265,6 +265,10 @@ li#status, li#settings, li#logout, li#login, li#rules{
     display: inline-grid;
 }
 
+.dialog .single {
+    grid-column: span 2;
+}
+
 input, button, select {
     padding: 2px;
     font-family: sans-serif;
