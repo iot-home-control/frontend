@@ -151,6 +151,7 @@ let plusminus_initializer = (thing, e) => {
     let plus = e.querySelector("span[name='plus']");
     let minus = e.querySelector("span[name='minus']");
     let value_ele = e.querySelector("span[name='value']");
+    let old_value;
     let new_value;
     let cb = () => {
         socket.send(JSON.stringify({
@@ -163,18 +164,21 @@ let plusminus_initializer = (thing, e) => {
             div.classList.remove("pending");
         }, 1000));
         div.classList.remove("pending");
+        value_ele.innerText = old_value;
     };
 
     plus.addEventListener('click', () => {
         //plus.click()
         div.classList.add("pending");
-        new_value = parseInt(value_ele.innerText) + 1
+        old_value = parseInt(value_ele.innerText)
+        new_value = old_value + 1
         cb()
     });
     minus.addEventListener('click', () => {
         //minus.click();
         div.classList.add("pending");
-        new_value = parseInt(value_ele.innerText) - 1;
+        old_value = parseInt(value_ele.innerText)
+        new_value = old_value - 1;
         cb()
     });
 };
@@ -677,7 +681,7 @@ let ws_connect = () => {
         const l = window.location;
         const c = config;
         return (c.ws_proto || l.protocol.replace("http", "ws")) + "//"
-            + (c.ws_host || l.host)
+            + (c.ws_host || l.hostname)
             + ((c.ws_port ? ":" + c.ws_port : undefined) || (l.port ? ":" + l.port : ""))
             + c.ws_path;
     };
