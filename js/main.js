@@ -52,6 +52,7 @@ const updaters = {
     humidity: (e, s, b, f) => { update_float_value(e, f); },
     shelly_temperature: (e, s, b, f) => { update_float_value(e, f); },
     shelly_humidity: (e, s, b, f) => { update_float_value(e, f); },
+    shellytrv: (e, s, b, f) => { update_float_value(e, f); },
     soilmoisture: (e, s, b, f) => { update_float_value(e, f); },
     pressure: (e, s, b, f) => { update_float_value(e, f); },
     shelly: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
@@ -146,9 +147,43 @@ let checkbox_initializer = (thing, e) => {
     checkbox.addEventListener("change", cb);
 };
 
+let plusminus_initializer = (thing, e) => {
+    let div = e.querySelector("div.thing-detail");
+    let plus = e.querySelector("span[name='plus']");
+    let minus = e.querySelector("span[name='minus']");
+    let value_ele = e.querySelector("span[name='value']");
+    let new_value;
+    let cb = () => {
+        socket.send(JSON.stringify({
+            type: "command",
+            id: thing.id,
+            value: new_value,
+        }));
+        add_pending_change(thing, setTimeout(() => {
+            value_ele.innerText = new_value;
+            div.classList.remove("pending");
+        }, 1000));
+        div.classList.remove("pending");
+    };
+
+    plus.addEventListener('click', () => {
+        //plus.click()
+        div.classList.add("pending");
+        new_value = parseInt(value_ele.innerText) + 1
+        cb()
+    });
+    minus.addEventListener('click', () => {
+        //minus.click();
+        div.classList.add("pending");
+        new_value = parseInt(value_ele.innerText) - 1;
+        cb()
+    });
+};
+
 const initalizers = {
     shelly: checkbox_initializer,
     switch: checkbox_initializer,
+    shellytrv: plusminus_initializer,
 };
 
 let apply_feather = (root) => {
