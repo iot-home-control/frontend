@@ -133,8 +133,7 @@ let checkbox_initializer = (thing, e) => {
             id: thing.id,
             value: checkbox.checked,
         }));
-        //div.classList.remove(checkbox.checked ? "off": "on");
-        //div.classList.add(checkbox.checked ? "on": "off");
+
         const prev_value = !checkbox.checked;
         add_pending_change(thing, setTimeout(() => {
             checkbox.checked = prev_value;
