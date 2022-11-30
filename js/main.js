@@ -55,6 +55,7 @@ const updaters = {
     soilmoisture: (e, s, b, f) => { update_float_value(e, f); },
     pressure: (e, s, b, f) => { update_float_value(e, f); },
     shelly: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
+    shellyplus: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
     switch: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
     "frischluftworks-co2": (e, s, b, f) => { update_float_value(e, f); },
 }
@@ -148,6 +149,7 @@ let checkbox_initializer = (thing, e) => {
 
 const initalizers = {
     shelly: checkbox_initializer,
+    shellyplus: checkbox_initializer,
     switch: checkbox_initializer,
 };
 

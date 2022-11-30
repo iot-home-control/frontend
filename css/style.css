@@ -97,7 +97,7 @@ html {
     transform: translateX(-50%);
 }
 
-.thing-shelly input[type="checkbox"], .thing-switch input[type="checkbox"] {
+.thing-shelly input[type="checkbox"], .thing-switch input[type="checkbox"], .thing-shellyplus input[type="checkbox"] {
     display: none;
 }
 
