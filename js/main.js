@@ -58,6 +58,8 @@ const updaters = {
     shellyplus: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
     switch: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
     "frischluftworks-co2": (e, s, b, f) => { update_float_value(e, f); },
+    shelly_power: (e, s, b, f) => { update_float_value(e, f); },
+    shelly_energy: (e, s, b, f) => { update_float_value(e, f); },
 }
 
 let pending_changes = {};
