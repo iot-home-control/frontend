@@ -34,6 +34,17 @@ let update_float_value = (e, f) => {
     span.innerText = f.toString();
 };
 
+const update_float_value_with_units = (e, f, unit_func) => {
+    const unit_element = e.querySelector("div.thing-value");
+    if (unit_func) {
+        const {unit, scaled} = unit_func(f);
+        unit_element.lastChild.textContent = ` ${unit}`;
+        f = scaled;
+    }
+    let span = e.querySelector("span[name='value']");
+    span.innerText = f.toString();
+};
+
 let update_checkbox = (e, b) => {
     let checkbox = e.querySelector("input[type='checkbox']");
     checkbox.checked = b;
@@ -46,6 +57,27 @@ let clear_pending_indicator = (e) => {
     let detail = e.querySelector(".thing-detail");
     detail.classList.remove("pending");
 };
+
+const round_to_digits = (value, digits=0) => {
+    const factor = Math.pow(10, digits);
+    return Math.round(value * factor) / factor;
+};
+
+const power_reading_unit_func = (value) => {
+    if (Math.abs(value) < 1000) {
+        return { unit: "W", scaled: value };
+    } else {
+        return { unit: "kW", scaled: round_to_digits(value / 1000, 2) }
+    }
+}
+
+const energy_reading_unit_func = (value) => {
+    if (Math.abs(value) < 1000) {
+        return { unit: "Wh", scaled: value };
+    } else {
+        return { unit: "kWh", scaled: round_to_digits(value / 1000, 2) }
+    }
+}
 
 const updaters = {
     temperature: (e, s, b, f) => { update_float_value(e, f); },
@@ -60,6 +92,8 @@ const updaters = {
     "frischluftworks-co2": (e, s, b, f) => { update_float_value(e, f); },
     shelly_power: (e, s, b, f) => { update_float_value(e, f); },
     shelly_energy: (e, s, b, f) => { update_float_value(e, f); },
+    esp32_smartmeter_power: (e, s, b, f) => { update_float_value_with_units(e, f, power_reading_unit_func); },
+    esp32_smartmeter_energy: (e, s, b, f) => { update_float_value_with_units(e, f, energy_reading_unit_func); },
 }
 
 let pending_changes = {};
