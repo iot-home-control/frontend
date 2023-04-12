@@ -91,8 +91,8 @@ const updaters = {
     shellyplus: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
     switch: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
     "frischluftworks-co2": (e, s, b, f) => { update_float_value(e, f); },
-    shelly_power: (e, s, b, f) => { update_float_value(e, f); },
-    shelly_energy: (e, s, b, f) => { update_float_value(e, f); },
+    shelly_power: (e, s, b, f) => { update_float_value_with_units(e, f, power_reading_unit_func); },
+    shelly_energy: (e, s, b, f) => { update_float_value_with_units(e, f, energy_reading_unit_func); },
     esp32_smartmeter_power: (e, s, b, f) => { update_float_value_with_units(e, f, power_reading_unit_func); },
     esp32_smartmeter_energy: (e, s, b, f) => { update_float_value_with_units(e, f, energy_reading_unit_func); },
 }
