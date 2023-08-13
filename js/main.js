@@ -325,6 +325,7 @@ const show_thing_edit_dialog = (data) => {
     const thing_vnode = e.querySelector('*[name=thing-vnode]'); thing_vnode.value = data.vnode;
     const thing_visible = e.querySelector('*[name=thing-visible]'); thing_visible.checked = data.visible;
     const views_select = e.querySelector('*[name=thing-views]');
+    const thing_ordering = e.querySelector('*[name=thing-ordering]'); thing_ordering.value = data.ordering;
     for(const entry of data.views) {
         const element = document.createElement('option');
         element.value = entry.value;
@@ -348,6 +349,7 @@ const show_thing_edit_dialog = (data) => {
                 device_id: thing_device_id.value,
                 vnode: thing_vnode.value,
                 visible: thing_visible.checked,
+                ordering: thing_ordering.value,
                 views: Array.from(views_select.selectedOptions).map(o => ({value: o.value, text: o.text})),
             },
         }));
