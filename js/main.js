@@ -685,7 +685,7 @@ let ws_connect = () => {
         const l = window.location;
         const c = config;
         return (c.ws_proto || l.protocol.replace("http", "ws")) + "//"
-            + (c.ws_host || l.host)
+            + (c.ws_host || l.hostname)
             + ((c.ws_port ? ":" + c.ws_port : undefined) || (l.port ? ":" + l.port : ""))
             + c.ws_path;
     };
