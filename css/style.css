@@ -187,6 +187,14 @@ li#status, li#settings, li#logout, li#login, li#rules{
 .off {
 }
 
+.thing-grid {
+    display: grid;
+}
+
+.thing-grid-item {
+    grid-row: 1;
+}
+
 .feather {
   width: 12pt;
   height: 12pt;
@@ -212,21 +220,12 @@ li#status, li#settings, li#logout, li#login, li#rules{
 }
 
 .center-outer {
-    float: right;
-    right: 50%;
-    position: relative;
-}
-.center-inner {
-    float: right;
-    right: -50%;
-    position: relative;
-}
-.center-clear {
-    clear: both;
+    display: flex;
+    justify-content: space-around;
+
 }
 
 .overlay {
-    /*width: 100%;*/
     z-index: 1;
     background-color: rgba(0,0,0,0.5);
     position: fixed;
