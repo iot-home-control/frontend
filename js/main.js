@@ -361,7 +361,7 @@ const show_thing_edit_dialog = (data) => {
     }
     const thing_device_id = e.querySelector('*[name=thing-device-id]'); thing_device_id.value = data.device_id;
     const thing_vnode = e.querySelector('*[name=thing-vnode]'); thing_vnode.value = data.vnode;
-    const thing_visible = e.querySelector('*[name=thing-visible]'); thing_visible.checked = data.visible;
+    const thing_visible = e.querySelector('*[name=thing-visible]'); thing_visible.options[data.visible ? 0 : 1].selected = true;
     const views_select = e.querySelector('*[name=thing-views]');
     const thing_ordering = e.querySelector('*[name=thing-ordering]'); thing_ordering.value = data.ordering;
     for(const entry of data.views) {
@@ -386,8 +386,8 @@ const show_thing_edit_dialog = (data) => {
                 thing_type: type_select.value,
                 device_id: thing_device_id.value,
                 vnode: thing_vnode.value,
-                visible: thing_visible.checked,
                 ordering: thing_ordering.value,
+                visible: thing_visible.value === "true",
                 views: Array.from(views_select.selectedOptions).map(o => ({value: o.value, text: o.text})),
             },
         }));
@@ -473,6 +473,14 @@ let update_rules_dialog = (data) => {
         const rule_checkbox = content.querySelector(`input[name="${rule.name}"]`)
         if(rule_checkbox) {
             rule_checkbox.checked = rule.state;
+            const parent = rule_checkbox.parentElement
+            parent.querySelector("svg")?.remove()
+            const icon = document.createElement("i")
+            icon.classList.add("icon")
+            icon.setAttribute("data-feather", rule_checkbox.checked ? "check-square" : "square" );
+            parent.appendChild(icon)
+            apply_feather(parent)
+
         } else {
     //<div class="label"><label for="thing-name">Name</label></div>
     //<div class="control"><input type="text" name="thing-name"></input></div>
@@ -481,23 +489,30 @@ let update_rules_dialog = (data) => {
             const control_div = document.createElement("div")
             control_div.classList.add("control")
 
+            const wrapper = document.createElement("span");
             const label = document.createElement("label")
             const checkbox = document.createElement("input")
             checkbox.type = "checkbox"
             checkbox.name = rule.name
             checkbox.checked = rule.state
-            checkbox.addEventListener("change", () => {
-                const new_state = checkbox.checked
+            wrapper.addEventListener("click", () => {
+                const new_state = !checkbox.checked
                 const rule_name = checkbox.name
                 console.log("New rule state ", rule_name, new_state)
                 update_rule_state(rule_name, new_state);
             });
+            const icon = document.createElement("i")
+            icon.classList.add("icon")
+            icon.setAttribute("data-feather", checkbox.checked ? "check-square" : "square" );
             label.innerText = rule.name
             label.htmlFor = checkbox.name
             label_div.appendChild(label)
-            control_div.appendChild(checkbox)
+            wrapper.append(checkbox);
+            wrapper.append(icon);
+            control_div.appendChild(wrapper)
             content.insertBefore(label_div, close_button)
             content.insertBefore(control_div, close_button)
+            apply_feather(content)
         }
     });
 };
