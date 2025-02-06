@@ -14,7 +14,7 @@
 
         <template id="template-edit-thing">
             <div class="center-outer">
-                <div class="dialog-frame center-inner">
+                <div class="dialog-frame">
                     <div class="dialog dialog-edit-thing">
                         <input type="hidden" name="thing-id"></input>
                         <div class="label"><label for="thing-name">Name</label></div>
@@ -28,7 +28,7 @@
                         <div class="label"><label for="thing-ordering">Ordering</label></div>
                         <div class="control"><input type="text" name="thing-ordering"></input></div>
                         <div class="label"><label for="thing-visible">Visible</label></div>
-                        <div class="control"><input type="checkbox" name="thing-visible"></input></div>
+                        <div class="control"><select name="thing-visible"><option value="true">yes</option><option value="false">no</option></select></div>
                         <div class="label"><label for="thing-views">In Views</label></div>
                         <div class="control"><select name="thing-views" multiple></select></div>
                         <div class="label"><button name="button-accept">Save</button></div>
@@ -36,7 +36,6 @@
                     </div>
                 </div>
             </div>
-            <div class="center-clear"></div>
         </template>
         <template id="template-edit-view">
             <input type="hidden" name="view-id">
@@ -45,7 +44,7 @@
         </template>
         <template id="template-login">
             <div class="center-outer">
-                <div class="dialog-frame center-inner">
+                <div class="dialog-frame">
                     <form class="dialog dialog-login">
                         <div class="label"><label for="username">Username</label></div>
                         <div class="control"><input type="text" name="username"/></div>
@@ -56,17 +55,15 @@
                     </form>
                 </div>
             </div>
-            <div class="center-clear"></div>
         </template>
         <template id="template-dynamic-dialog">
             <div class="center-outer">
-                <div class="dialog-frame center-inner">
+                <div class="dialog-frame">
                     <div class="dialog">
                     <!-- Put content here. Via JS. -->
                     </div>
                 </div>
             </div>
-            <div class="center-clear"></div>
         </template>
         <template id="template-temperature">
             <div class="thing thing-temperature">
@@ -153,9 +150,9 @@
                     <!--<input type="checkbox">-->
                     <div class="thing-value">
                         <span name="value">-</span> °C
-                        <div>
-                            <span name="plus"><i class="feather-big" data-feather="plus"></i></span>
-                            <span name="minus"><i class="feather-big" data-feather="minus"></i></span>
+                        <div class="thing-grid">
+                            <span class="thing-grid-item" name="plus"><i class="feather-big" data-feather="plus"></i></span>
+                            <span class="thing-grid-item" name="minus"><i class="feather-big" data-feather="minus"></i></span>
                         </div>
                     </div>
                     <div class="thing-name"><span name="name">Anonymous</span></div>
