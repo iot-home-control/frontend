@@ -29,6 +29,8 @@ let things = {};
 let edit_mode_active = false;
 let current_overlay = null;
 
+let countdowns = {}
+
 let update_float_value = (e, f) => {
     let span = e.querySelector("span[name='value']");
     span.innerText = f.toString();
@@ -448,11 +450,12 @@ let authenticate = (username, password) => {
 let close_dialog = () => {
     current_overlay.parentNode.removeChild(current_overlay);
     current_overlay = null;
+    stop_all_countdowns()
 }
 
 
 let show_rules = () => {
-    current_overlay = show_rules_dialog(undefined)
+    current_overlay = show_dynamic_dialog("Rules")
     document.getElementsByTagName('body')[0].appendChild(current_overlay);
     socket.send(JSON.stringify({
         type: "rules"}))
@@ -517,7 +520,7 @@ let update_rules_dialog = (data) => {
     });
 };
 
-let show_rules_dialog = (data) => {
+let show_dynamic_dialog = (title, show_save_button = false) => {
     const template = document.getElementById("template-dynamic-dialog");
     if(!template) {
         console.warn("No dialog template found.");
@@ -527,13 +530,22 @@ let show_rules_dialog = (data) => {
     const dialog = template.content.cloneNode(true);
     const content = dialog.querySelector(".dialog")
     const heading = document.createElement("span")
-    heading.innerHTML = "<b>Rules</b>"
+    heading.innerHTML = "<b>" + title + "</b>"
     heading.classList.add("single")
     content.appendChild(heading)
+    if(show_save_button) {
+        const saveButton = document.createElement("button")
+        saveButton.classList.add("label")
+        saveButton.name = "save";
+        saveButton.innerHTML = 'Save'
+        content.appendChild(saveButton)
+    }
+
 
     const closeButton = document.createElement("button")
-    closeButton.classList.add("single");
+    show_save_button ? closeButton.classList.add("control") : closeButton.classList.add("single");
     closeButton.addEventListener("click", close_dialog)
+    closeButton.name = "close"
     closeButton.innerHTML = 'Close'
     content.appendChild(closeButton)
 
@@ -545,7 +557,222 @@ let show_rules_dialog = (data) => {
     return overlay;
 }
 
-const flash = (message, type="success", actions=[]) => {
+let show_timers = () => {
+    current_overlay = show_dynamic_dialog("Timers", true)
+    document.getElementsByTagName('body')[0].appendChild(current_overlay);
+    socket.send(JSON.stringify({
+        type: "get_timers"
+    }))
+}
+
+let add_countdown = (name, element, schedule) => {
+    const count_down_date = new Date(schedule);
+
+    if(countdowns[name]) {
+        clearInterval(countdowns[name])
+    }
+    countdowns[name] = setInterval(() => {
+        const now = new Date().getTime();
+        // We want seconds
+        const distance = ((count_down_date - now) / 1000).toFixed();
+
+        const days = (distance / (24 * 60 * 60)).toFixed();
+        const hours = (distance % (24 * 60 * 60) / (60 * 60)).toFixed();
+        const minutes = (distance % (60 * 60) / 60).toFixed();
+        const seconds = (distance % 60).toFixed();
+
+        let date_str = ""
+        if(days > 0) {
+            date_str = days + "d"
+        } else {
+            if(hours > 0) {
+                date_str = hours + "h"
+            }
+            if(minutes > 0) {
+                date_str = date_str + " " + minutes + "m"
+            }
+            if(seconds > 0) {
+                date_str = date_str + " " + seconds + "s"
+            }
+        }
+        if(date_str === "") {
+            date_str = "pending"
+        }
+        element.innerHTML = date_str
+    }, 1000)
+}
+
+let stop_all_countdowns = () => {
+    Object.entries(countdowns).forEach(countdown => {
+        clearInterval(countdown[1])
+        countdowns[countdown[0]] = undefined
+    })
+}
+
+let update_timers_dialog = (data, rules) => {
+    const content = document.querySelector(".dialog")
+    const close_button = content.querySelector("button[name=close]")
+    const save_button = content.querySelector("button[name=save]")
+    if(save_button) {
+        save_button.name = "button-new_timer"
+        save_button.innerText = "Add Timer"
+        //save_button.classList.add("single")
+        save_button.addEventListener("click", (btn) => {
+            btn.preventDefault()
+            show_timer_edit_dialog({}, rules)
+        })
+    }
+    /*<div class="single" style="display: grid;grid-template-columns: auto auto auto auto;grid-column-gap: 1em;">
+   <div> Name </div> <div> Scheduled </div> <div> Enabled </div> <div> Edit </div></div>*/
+    let outerGrid = document.querySelector("#timer-grid");
+    if(!outerGrid) {
+        outerGrid = document.createElement("div")
+        outerGrid.id = "timer-grid";
+        outerGrid.classList.add("single")
+        outerGrid.classList.add("four-columns")
+        content.insertBefore(outerGrid, save_button)
+    }
+
+    for (const timer of data) {
+        const timer_checkbox = content.querySelector(`input[name="${timer.id}"]`)
+        if(timer_checkbox) {
+            timer_checkbox.checked = timer.enabled
+            const parent = timer_checkbox.parentElement
+            parent.querySelector("svg")?.remove()
+            const icon = document.createElement("i")
+            icon.classList.add("icon")
+            icon.setAttribute("data-feather", timer_checkbox.checked ? "check-square" : "square");
+            parent.appendChild(icon)
+            apply_feather(parent)
+            const schedule= outerGrid.querySelector(`timer-${timer.id}`)
+            add_countdown(timer.id, schedule, timer.schedule)
+        } else {
+            const name = document.createElement("div")
+            name.innerHTML = timer.id
+            outerGrid.appendChild(name)
+            const schedule = document.createElement("div")
+            schedule.id = `timer-${timer.id}`
+            schedule.classList.add("countdown")
+            schedule.innerHTML = "initializing"
+            add_countdown(timer.id, schedule, timer.schedule)
+            outerGrid.appendChild(schedule)
+            const wrapper = document.createElement("span");
+            const checkbox = document.createElement("input")
+            checkbox.type = "checkbox"
+            checkbox.name = timer.id
+            checkbox.checked = timer.enabled
+            wrapper.addEventListener("click", () => {
+                const new_state = !checkbox.checked
+                const timer_name = checkbox.name
+                update_timer(timer_name, undefined, new_state, undefined);
+            });
+            const icon = document.createElement("i")
+            icon.classList.add("icon")
+            icon.setAttribute("data-feather", checkbox.checked ? "check-square" : "square");
+            wrapper.append(checkbox)
+            wrapper.append(icon)
+            outerGrid.appendChild(wrapper)
+            const timerEdit = document.createElement("div")
+            const timerWrapper = document.createElement("span")
+            const timerEditIcon = document.createElement("i")
+            timerEditIcon.classList.add("icon")
+            timerEditIcon.setAttribute("data-feather", "edit");
+            timerWrapper.appendChild(timerEditIcon)
+            timerWrapper.addEventListener("click", () => {
+                show_timer_edit_dialog(timer, rules)
+            })
+            timerEdit.appendChild(timerWrapper)
+            outerGrid.appendChild(timerEdit)
+        }
+    }
+    apply_feather(content)
+}
+
+const show_timer_edit_dialog = (timer, rules) => {
+    const template = document.getElementById("template-edit-timer")
+    if(!template) {
+        console.warn("No template found")
+        return null
+    }
+
+    const e = template.content.cloneNode(true)
+    const timer_id = e.querySelector("input[name=timer-id]")
+    timer_id.value = timer.id
+    const timer_schedule = e.querySelector("input[name=timer-schedule]")
+    let timezone_offset = new Date(Date.now()).getTimezoneOffset() // default is Browser's timezone
+    if(timer.schedule) {
+        const js_date = new Date(timer.schedule)
+        timezone_offset = js_date.getTimezoneOffset()
+        const timezone_corrected_date = new Date(js_date.getTime() - (js_date.getTimezoneOffset() * 60000))
+        timer_schedule.value = timezone_corrected_date.toISOString().slice(0, 16)
+    }
+    const timer_enabled = e.querySelector("select[name=timer-enabled]")
+    timer_enabled.options[timer.enabled ? 0: 1].selected = true
+    const timer_rule = e.querySelector("select[name=timer-rule]")
+    Object.entries(rules).forEach(rule => {
+        const element = document.createElement("option")
+        element.value = rule[1]
+        element.text = rule[0]
+        element.selected = rule[1] === timer.rule_id
+        timer_rule.add(element)
+    })
+
+    e.querySelector('button[name=button-accept]').addEventListener("click", (btn) => {
+        btn.preventDefault()
+        // todo: timer rules and more
+        const timer_schedule = overlay.querySelector("input[name=timer-schedule]")
+        const new_date = new Date(timer_schedule.value +"+"+(timezone_offset / -60).toString().padStart(2, '0')+":00")
+        console.log(new_date, timer_enabled.value)
+        const rule_id = overlay.querySelector("select[name=timer-rule]").value
+        const timer_id = overlay.querySelector("input[name=timer-id]").value
+        update_timer(timer_id, new_date.toISOString(), timer_enabled.value==="1", rule_id,  {})
+        overlay.style.display = 'none';
+        overlay.parentNode.removeChild(overlay);
+    })
+    e.querySelector('button[name=button-reject]').addEventListener("click", (btn) => {
+        btn.preventDefault()
+        overlay.style.display = 'none';
+        overlay.parentNode.removeChild(overlay);
+    })
+    const overlay = document.createElement("div")
+    overlay.classList.add("overlay")
+    overlay.appendChild(e)
+    document.getElementsByTagName('body')[0].appendChild(overlay);
+
+}
+
+const update_timer = (timer_name, schedule = undefined, enabled = undefined, rule_id = undefined, data = undefined) => {
+    /*
+
+  {
+    "id": "Request Shelly announces",
+    "schedule": "2025-02-10T16:38:14.576916+01:00",
+    "enabled": true,
+    "data": {
+      "__interval__": 86400,
+      "kwargs": {}
+    }
+  }
+
+     */
+    if(!(timer_name)) {
+        console.error("Timer name not given")
+        return
+    }
+    const timer_dict = {"id": timer_name}
+    timer_dict["schedule"] = schedule
+    timer_dict["enabled"] = enabled
+    timer_dict["rule_id"] = rule_id
+    timer_dict["data"] = data
+
+
+    socket.send(JSON.stringify({
+        type: "timer",
+        data: timer_dict
+    }))
+}
+
+const flash = (message, type = "success", actions = []) => {
     const root = document.createElement("div")
     root.classList.add("flash")
     root.classList.add("flash-" + type)
@@ -699,6 +926,7 @@ let handle_message = (data) => {
         document.getElementById("logout").classList.toggle("invisible", !authenticated);
         document.getElementById("settings").classList.toggle("invisible", !authenticated);
         document.getElementById("rules").classList.toggle("invisible", !authenticated);
+        document.getElementById("timers").classList.toggle("invisible", !authenticated);
     } else if(data.type === "auth_failed") {
         if(current_overlay) {
             current_overlay.parentNode.removeChild(current_overlay);
@@ -707,6 +935,10 @@ let handle_message = (data) => {
         flash("Login failed.", "error", [{text: "Login", action: show_login_dialog}])
     } else if(data.type === "rules") {
         update_rules_dialog(data.value)
+    } else if(data.type === "timers") {
+        update_timers_dialog(data.value, data.rules)
+    } else if(data.type === "msg") {
+        flash(data.value)
     } else {
         console.log("Unimplemented message type", data)
     }
@@ -804,6 +1036,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.querySelector('#rules').addEventListener('click', (e) => {
         show_rules()
+    })
+    document.querySelector('#timers').addEventListener('click', (e) => {
+        show_timers()
     })
 });
 
