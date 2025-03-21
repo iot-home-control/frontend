@@ -644,7 +644,7 @@ let update_timers_dialog = (data, rules) => {
             icon.setAttribute("data-feather", timer_checkbox.checked ? "check-square" : "square");
             parent.appendChild(icon)
             apply_feather(parent)
-            const schedule= outerGrid.querySelector(`timer-${timer.id}`)
+            const schedule= outerGrid.querySelector(`#timer-${timer.id}`)
             add_countdown(timer.id, schedule, timer.schedule)
         } else {
             const name = document.createElement("div")
