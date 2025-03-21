@@ -565,7 +565,14 @@ let show_timers = () => {
     }))
 }
 
+  let leading_zeros = (value, number_of_digits=2) => {
+        return ("0".repeat(number_of_digits).concat(value)).slice(number_of_digits * -1)
+    }
+
 let add_countdown = (name, element, schedule) => {
+
+
+
     const count_down_date = new Date(schedule);
 
     if(countdowns[name]) {
@@ -574,24 +581,25 @@ let add_countdown = (name, element, schedule) => {
     countdowns[name] = setInterval(() => {
         const now = new Date().getTime();
         // We want seconds
-        const distance = ((count_down_date - now) / 1000).toFixed();
+        const distance = Math.round((count_down_date - now) / 1000);
 
-        const days = (distance / (24 * 60 * 60)).toFixed();
-        const hours = (distance % (24 * 60 * 60) / (60 * 60)).toFixed();
-        const minutes = (distance % (60 * 60) / 60).toFixed();
-        const seconds = (distance % 60).toFixed();
+        const days = Math.trunc(distance / (24 * 60 * 60))
+        const hours = leading_zeros(Math.trunc(distance % (24 * 60 * 60) / (60 * 60)))
+        const minutes = leading_zeros(Math.trunc(distance % (60 * 60) / 60))
+        const seconds = leading_zeros(Math.trunc(distance % 60))
+
 
         let date_str = ""
         if(days > 0) {
             date_str = days + "d"
         } else {
-            if(hours > 0) {
+            if(hours > 0 ) {
                 date_str = hours + "h"
             }
-            if(minutes > 0) {
+            if(minutes > 0  ||  hours > 0) {
                 date_str = date_str + " " + minutes + "m"
             }
-            if(seconds > 0) {
+            if(seconds > 0 ||  hours > 0 || minutes > 0 ) {
                 date_str = date_str + " " + seconds + "s"
             }
         }
