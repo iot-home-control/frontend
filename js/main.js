@@ -825,132 +825,184 @@ const flash = (message, type = "success", actions = []) => {
     document.getElementById("flash").appendChild(root)
 }
 
-let handle_message = (data) => {
-    if(data.type === "things") {
-        data.things.forEach(thing => {
-            if(thing.id in things && things[thing.id].element) {
-                const e = document.getElementById('thing-' + thing.id);
-                e.querySelector('.thing-name span[name="name"]').innerText = thing.name;
-                const currentView = decodeURI(window.location.hash.substr(1));
-                e.classList.toggle("invisible", !views[currentView].includes(thing.id) || !thing.visible);
+const handle_message_things = (data) => {
+    data.things.forEach(thing => {
+        if(thing.id in things && things[thing.id].element) {
+            const e = document.getElementById('thing-' + thing.id);
+            e.querySelector('.thing-name span[name="name"]').innerText = thing.name;
+            const currentView = decodeURI(window.location.hash.substr(1));
+            e.classList.toggle("invisible", !views[currentView].includes(thing.id) || !thing.visible);
 
-                thing.element = e;
-                things[thing.id] = thing;
-                return;
-            }
-            let element = create_thing_element(thing);
-            thing.element = element;
+            thing.element = e;
             things[thing.id] = thing;
-        });
-    } else if(data.type === "states") {
-        data.states.forEach((state) => {
-            if(!state.thing_id in things) {
-                console.warn("Got state for unknown thing", state.thing_id);
-                return;
-            }
-            let thing = things[state.thing_id];
-            if(thing)
-                update_thing_state(thing, state);
-        });
-    } else if(data.type === "views") {
-        document.querySelectorAll(".thing-view").forEach((e) => { e.remove() });
-        current_view = ""
-        views = {}
+            return;
+        }
+        let element = create_thing_element(thing);
+        thing.element = element;
+        things[thing.id] = thing;
+    });
+};
 
-        for(let [name, things] of Object.entries(data.views)) {
-            let li = document.createElement("li");
-            li.id = "view-" + name;
-            li.classList.add("menu-item");
-            li.classList.add("thing-view");
-            let a = document.createElement("a");
-            a.href = "#" + name;
-            a.innerText = name;
-            li.appendChild(a);
-            li.addEventListener("click", () => { show_view(name);})
-            document.querySelector("#bar").appendChild(li);
-            views[name] = things;
+const handle_message_states = (data) => {
+    data.states.forEach((state) => {
+        if(!state.thing_id in things) {
+            console.warn("Got state for unknown thing", state.thing_id);
+            return;
         }
-        let saved_view = decodeURI(window.location.hash.substr(1));
-        if(!saved_view)
-            saved_view = Object.entries(views)[0][0];
-        show_view(saved_view);
-    } else if(data.type === "last_seen") {
-        const now = Date.now();
-        for(let [thing_id, timestamp] of Object.entries(data.last_seen)) {
-            if(!(thing_id in things)) {
-                continue;
-            }
-            const elem = things[thing_id].element;
-            if(!elem) {
-                continue;
-            }
-            if(timestamp === null) {
-                elem.classList.add("timeout-unknown");
-                continue;
-            } else {
-                elem.classList.remove("timeout-unknown");
-            }
-            const date = Date.parse(timestamp);
-            const diff = now - date;
-            if(diff > last_seen_warning_interval) {
-                elem.classList.add("timed-out");
+        let thing = things[state.thing_id];
+        if(thing)
+            update_thing_state(thing, state);
+    });
+};
 
-                let name_elem = elem.querySelector('.thing-name[rel="tooltip"]');
-                if(!name_elem) {
-                    name_elem = elem.querySelector(".thing-name");
-                    name_elem.setAttribute("rel", "tooltip");
-                    window.setup_tooltip(name_elem);
-                }
-                name_elem.title = "Last seen " + describe_time_diff(diff/1000);
-            } else {
-                elem.classList.remove("timed-out");
-                let name_elem = elem.querySelector('.thing-name[rel="tooltip"]');
-                if(name_elem) {
-                    name_elem.setAttribute("rel", null);
-                    name_elem.title = null;
-                }
+const handle_message_views = (data) => {
+    document.querySelectorAll(".thing-view").forEach((e) => { e.remove() });
+    current_view = ""
+    views = {}
+
+    for(let [name, things] of Object.entries(data.views)) {
+        let li = document.createElement("li");
+        li.id = "view-" + name;
+        li.classList.add("menu-item");
+        li.classList.add("thing-view");
+        let a = document.createElement("a");
+        a.href = "#" + name;
+        a.innerText = name;
+        li.appendChild(a);
+        li.addEventListener("click", () => { show_view(name);})
+        document.querySelector("#bar").appendChild(li);
+        views[name] = things;
+    }
+    let saved_view = decodeURI(window.location.hash.substr(1));
+    if(!saved_view)
+        saved_view = Object.entries(views)[0][0];
+    show_view(saved_view);
+};
+
+const handle_message_last_seen = (data) => {
+    const now = Date.now();
+    for(let [thing_id, timestamp] of Object.entries(data.last_seen)) {
+        if(!(thing_id in things)) {
+            continue;
+        }
+        const elem = things[thing_id].element;
+        if(!elem) {
+            continue;
+        }
+        if(timestamp === null) {
+            elem.classList.add("timeout-unknown");
+            continue;
+        } else {
+            elem.classList.remove("timeout-unknown");
+        }
+        const date = Date.parse(timestamp);
+        const diff = now - date;
+        if(diff > last_seen_warning_interval) {
+            elem.classList.add("timed-out");
+
+            let name_elem = elem.querySelector('.thing-name[rel="tooltip"]');
+            if(!name_elem) {
+                name_elem = elem.querySelector(".thing-name");
+                name_elem.setAttribute("rel", "tooltip");
+                window.setup_tooltip(name_elem);
+            }
+            name_elem.title = "Last seen " + describe_time_diff(diff/1000);
+        } else {
+            elem.classList.remove("timed-out");
+            let name_elem = elem.querySelector('.thing-name[rel="tooltip"]');
+            if(name_elem) {
+                name_elem.setAttribute("rel", null);
+                name_elem.title = null;
             }
         }
-        current_last_seen_timeout_id = setTimeout(get_last_seen, get_last_seen_interval);
-    } else if(data.type === "edit_data") {
-        if(data.kind === "thing") {
-            current_overlay = show_thing_edit_dialog(data.data);
-            document.getElementsByTagName('body')[0].appendChild(current_overlay);
-        }
-    } else if(data.type === "edit_ok" && current_overlay) {
+    }
+    current_last_seen_timeout_id = setTimeout(get_last_seen, get_last_seen_interval);
+};
+
+const handle_message_edit_data = (data) => {
+    if(data.kind === "thing") {
+        current_overlay = show_thing_edit_dialog(data.data);
+        document.getElementsByTagName('body')[0].appendChild(current_overlay);
+    }
+};
+
+const handle_message_edit_ok = (data) => {
+    if(!current_overlay)
+        return;
+
+    current_overlay.parentNode.removeChild(current_overlay);
+    current_overlay = null;
+    flash("Thing successfully saved.")
+};
+
+const handle_message_cookie = (data) => {
+    document.cookie = `auth=${data.value};max-age=${data.max_age}`;
+};
+
+const handle_message_auth_required = (data) => {
+    flash("You need to login to use this function.", "error", [{text: "Login", action: show_login_dialog}]);
+};
+
+const handle_message_auth_ok = (data) => {
+    if(current_overlay) {
         current_overlay.parentNode.removeChild(current_overlay);
         current_overlay = null;
-        flash("Thing successfully saved.")
-    } else if(data.type === "cookie") {
-        document.cookie = `auth=${data.value};max-age=${data.max_age}`
-    } else if(data.type === "auth_required") {
-        flash("You need to login to use this function.", "error", [{text: "Login", action: show_login_dialog}]);
-    } else if(data.type === "auth_ok") {
-        if(current_overlay) {
-            current_overlay.parentNode.removeChild(current_overlay);
-            current_overlay = null;
-            flash("Login succeded.")
-        }
-        const authenticated = data.level >= 2
-        document.getElementById("login").classList.toggle("invisible", authenticated);
-        document.getElementById("logout").classList.toggle("invisible", !authenticated);
-        document.getElementById("settings").classList.toggle("invisible", !authenticated);
-        document.getElementById("rules").classList.toggle("invisible", !authenticated);
-        document.getElementById("timers").classList.toggle("invisible", !authenticated);
-    } else if(data.type === "auth_failed") {
-        if(current_overlay) {
-            current_overlay.parentNode.removeChild(current_overlay);
-            current_overlay = null;
-        }
-        flash("Login failed.", "error", [{text: "Login", action: show_login_dialog}])
-    } else if(data.type === "rules") {
-        update_rules_dialog(data.value)
-    } else if(data.type === "timers") {
-        update_timers_dialog(data.value, data.rules)
-    } else if(data.type === "msg") {
-        flash(data.value)
-    } else {
-        console.log("Unimplemented message type", data)
+        flash("Login succeded.")
+    }
+    const authenticated = data.level >= 2
+    document.getElementById("login").classList.toggle("invisible", authenticated);
+    document.getElementById("logout").classList.toggle("invisible", !authenticated);
+    document.getElementById("settings").classList.toggle("invisible", !authenticated);
+    document.getElementById("rules").classList.toggle("invisible", !authenticated);
+    document.getElementById("timers").classList.toggle("invisible", !authenticated);
+};
+
+const handle_message_auth_failed = (data) => {
+    if(current_overlay) {
+        current_overlay.parentNode.removeChild(current_overlay);
+        current_overlay = null;
+    }
+    flash("Login failed.", "error", [{text: "Login", action: show_login_dialog}]);
+};
+
+const handle_message_rules = (data) => {
+    update_rules_dialog(data.value);
+};
+
+const handle_message_timers = (data) => {
+    update_timers_dialog(data.value, data.rules);
+};
+
+const handle_message_msg = (data) => {
+    flash(data.value);
+};
+
+let handle_message = (data) => {
+    const handlers = {
+        things: handle_message_things,
+        states: handle_message_states,
+        views: handle_message_views,
+        last_seen: handle_message_last_seen,
+        edit_data: handle_message_edit_data,
+        edit_ok: handle_message_edit_ok,
+        cookie: handle_message_cookie,
+        auth_required: handle_message_auth_required,
+        auth_ok: handle_message_auth_ok,
+        auth_failed: handle_message_auth_failed,
+        rules: handle_message_rules,
+        timers: handle_message_timers,
+        msg: handle_message_msg,
+    }
+
+    if(!handlers[data.type]) {
+        console.error(`Unimplemented message type: "${data.type}".`);
+        return;
+    }
+
+    try {
+        handlers[data.type](data);
+    } catch(e) {
+        console.error(`Handler for "${data.type}" failed:`, e);
     }
 };
 
