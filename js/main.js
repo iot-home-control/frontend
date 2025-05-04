@@ -791,7 +791,7 @@ const flash = (message, type = "success", actions = []) => {
 
     const closeFlash = () => {
         root.style.display = "none"
-        root.parentElement.removeChild(root)
+        root.parentElement?.removeChild(root)
     }
 
     const closeButton = document.createElement("button")
@@ -801,7 +801,7 @@ const flash = (message, type = "success", actions = []) => {
 
     root.appendChild(messageElement)
 
-    if(actions) {
+    if(actions.length) {
         actions.forEach((action) => {
             const button = document.createElement("button")
             button.addEventListener("click", (e) => {
@@ -816,6 +816,8 @@ const flash = (message, type = "success", actions = []) => {
             }
             root.appendChild(button)
         })
+    } else {
+        setTimeout(closeFlash, 3000);
     }
     root.appendChild(closeButton)
     apply_feather(root)
