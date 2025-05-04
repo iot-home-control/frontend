@@ -31,33 +31,138 @@ let current_overlay = null;
 
 let countdowns = {}
 
+
+class HCElement extends HTMLElement
+{
+    thingId = "not-set";
+
+    constructor(template_name) {
+        super();
+
+        const template = document.getElementById(template_name);
+        this.appendChild(template.content.cloneNode(true));
+        this.classList.toggle("thing", true);
+
+        apply_feather(this);
+
+        const edit = this.querySelector('.edit');
+        if(edit) {
+            edit.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                socket.send(JSON.stringify({
+                    type: "create_or_edit",
+                    id: this.thingId,
+                }));
+                show_thing_edit(false);
+            });
+        }
+    }
+
+    setThingId(id) {
+        this.thingId = id;
+        this.id = "thing-" + id;
+    }
+}
+
+
+class ValueDisplay extends HCElement
+{
+    static observedAttributes = ["name", "unit", "value"];
+    #displayFunc;
+    #currentUnit;
+    #currentValue;
+
+    constructor() {
+        super("template-value-display");
+
+        this.nameElement = this.querySelector("span[name=name]");
+        this.valueElement = this.querySelector("span[name=value]");
+        this.unitElement = this.querySelector("span[name=unit]");
+    }
+
+    setDisplayFunc(func) {
+        this.#displayFunc = func;
+    }
+
+    setValue(value) {
+        this.setAttribute("value", value);
+    }
+
+    #refresh() {
+        if(this.#displayFunc) {
+            const {unit, scaled} = this.#displayFunc(this.#currentValue);
+            this.valueElement.textContent = scaled;
+            this.unitElement.textContent = unit;
+        } else {
+            this.valueElement.textContent = this.#currentValue || "-";
+            this.unitElement.textContent = this.#currentUnit || "-";
+        }
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if(name === "name") {
+            this.nameElement.textContent = newValue;
+        } else if(name === "unit") {
+            this.#currentUnit = newValue;
+            this.#refresh();
+        } else if(name === "value") {
+            this.#currentValue = newValue;
+            this.#refresh();
+        }
+    }
+}
+
+class OnOff extends HCElement
+{
+    static observedAttributes = ["name", "value"];
+    #isOn = false;
+    #isPending = false;
+
+    constructor() {
+        super("template-thing-with-button");
+
+        this.nameElement = this.querySelector("span[name=name]");
+        this.detailElement = this.querySelector(".thing-detail");
+
+        this.addEventListener("click", () => {
+            this.setPending(true);
+            socket.send(JSON.stringify({
+                type: "command",
+                id: this.thingId,
+                value: !this.#isOn,
+            }));
+            add_pending_change({id: this.thingId}, setTimeout(() => this.setPending(false), 1000));
+        });
+    }
+
+    setOn(value) {
+        this.setPending(false);
+        this.#isOn = value;
+        this.detailElement.classList.toggle("on", this.#isOn);
+    }
+
+    setPending(value) {
+        this.#isPending = value;
+        this.detailElement.classList.toggle("pending", this.#isPending);
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if(name === "name") {
+            this.nameElement.textContent = newValue;
+        } else if(name === "value") {
+            this.setOn(newValue === true);
+        }
+    }
+}
+
+customElements.define("hc-value-display", ValueDisplay);
+customElements.define("hc-on-off", OnOff);
+
+
 let update_float_value = (e, f) => {
     let span = e.querySelector("span[name='value']");
     span.innerText = f.toString();
-};
-
-const update_float_value_with_units = (e, f, unit_func) => {
-    const unit_element = e.querySelector("div.thing-value");
-    if (unit_func) {
-        const {unit, scaled} = unit_func(f);
-        unit_element.lastChild.textContent = ` ${unit}`;
-        f = scaled;
-    }
-    let span = e.querySelector("span[name='value']");
-    span.innerText = f.toString();
-};
-
-let update_checkbox = (e, b) => {
-    let checkbox = e.querySelector("input[type='checkbox']");
-    checkbox.checked = b;
-    let detail = e.querySelector(".thing-detail");
-    detail.classList.remove(b ? "off": "on");
-    detail.classList.add(b ? "on": "off");
-};
-
-let clear_pending_indicator = (e) => {
-    let detail = e.querySelector(".thing-detail");
-    detail.classList.remove("pending");
 };
 
 const round_to_digits = (value, digits=0) => {
@@ -82,22 +187,43 @@ const energy_reading_unit_func = (value) => {
 }
 
 const updaters = {
-    temperature: (e, s, b, f) => { update_float_value(e, f); },
-    humidity: (e, s, b, f) => { update_float_value(e, f); },
-    shelly_temperature: (e, s, b, f) => { update_float_value(e, f); },
-    shelly_humidity: (e, s, b, f) => { update_float_value(e, f); },
+    temperature: (e, s, b, f) => { e.setValue(f); },
+    humidity: (e, s, b, f) => { e.setValue(f); },
+    shelly_temperature: (e, s, b, f) => { e.setValue(f); },
+    shelly_humidity: (e, s, b, f) => { e.setValue(f); },
     shellytrv: (e, s, b, f) => { update_float_value(e, f); },
-    soilmoisture: (e, s, b, f) => { update_float_value(e, f); },
-    pressure: (e, s, b, f) => { update_float_value(e, f); },
-    shelly: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
-    shellyplus: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
-    switch: (e, s, b, f) => { clear_pending_indicator(e); update_checkbox(e, b); },
-    "frischluftworks-co2": (e, s, b, f) => { update_float_value(e, f); },
-    shelly_power: (e, s, b, f) => { update_float_value_with_units(e, f, power_reading_unit_func); },
-    shelly_energy: (e, s, b, f) => { update_float_value_with_units(e, f, energy_reading_unit_func); },
-    esp32_smartmeter_power: (e, s, b, f) => { update_float_value_with_units(e, f, power_reading_unit_func); },
-    esp32_smartmeter_energy: (e, s, b, f) => { update_float_value_with_units(e, f, energy_reading_unit_func); },
+    soilmoisture: (e, s, b, f) => { e.setValue(f); },
+    pressure: (e, s, b, f) => { e.setValue(f); },
+    shelly: (e, s, b, f) => { e.setOn(b); },
+    shellyplus: (e, s, b, f) => { e.setOn(b); },
+    switch: (e, s, b, f) => { e.setOn(b); },
+    "frischluftworks-co2": (e, s, b, f) => { e.setValue(f); },
+    shelly_power: (e, s, b, f) => { e.setValue(f); },
+    shelly_energy: (e, s, b, f) => { e.setValue(f); },
+    esp32_smartmeter_power: (e, s, b, f) => { e.setValue(f); },
+    esp32_smartmeter_energy: (e, s, b, f) => { e.setValue(f); },
 }
+
+const thing_type_display_funcs = {
+    shelly_power: power_reading_unit_func,
+    shelly_energy: energy_reading_unit_func,
+    esp32_smartmeter_power: power_reading_unit_func,
+    esp32_smartmeter_energy: energy_reading_unit_func,
+};
+
+const thing_type_units = {
+    temperature: "°C",
+    humidity: "%",
+    shelly_temperature: "°C",
+    shelly_humidity: "%",
+    soilmoisture: "%",
+    pressure: "mbar",
+    "frischluftworks-co2": "ppm",
+    shelly_power: "W",
+    shelly_energy: "Wh",
+    esp32_smartmeter_power: "W",
+    esp32_smartmeter_energy: "Wh",
+};
 
 let pending_changes = {};
 
@@ -116,7 +242,7 @@ let cancel_pending_changes = (thing) => {
     pending_changes[thing.id] = [];
 };
 
-const show_thing_edit = (value) => {
+function show_thing_edit(value) {
     edit_mode_active = value;
     document.getElementById('settings').classList.toggle('active', value);
     for(const elem of document.querySelectorAll('.edit')) {
@@ -154,36 +280,7 @@ const show_thing_edit = (value) => {
     } else if(!value && thing_add) {
         things.removeChild(thing_add);
     }
-};
-
-let checkbox_initializer = (thing, e) => {
-    let div = e.querySelector("div.thing-detail");
-    let checkbox = e.querySelector("input[type='checkbox']");
-    div.addEventListener('click', () => {
-        checkbox.click();
-        div.classList.add("pending");
-    });
-
-    let cb = () => {
-
-        //console.log(div);
-        socket.send(JSON.stringify({
-            type: "command",
-            id: thing.id,
-            value: checkbox.checked,
-        }));
-
-        const prev_value = !checkbox.checked;
-        add_pending_change(thing, setTimeout(() => {
-            checkbox.checked = prev_value;
-            div.classList.remove(checkbox.checked ? "off": "on");
-            div.classList.add(checkbox.checked ? "on": "off");
-            div.classList.remove("pending");
-        }, 1000));
-        div.classList.remove("pending");
-    };
-    checkbox.addEventListener("change", cb);
-};
+}
 
 let plusminus_initializer = (thing, e) => {
     let div = e.querySelector("div.thing-detail");
@@ -223,13 +320,10 @@ let plusminus_initializer = (thing, e) => {
 };
 
 const initalizers = {
-    shelly: checkbox_initializer,
-    shellyplus: checkbox_initializer,
-    switch: checkbox_initializer,
     shellytrv: plusminus_initializer,
 };
 
-let apply_feather = (root) => {
+function apply_feather(root) {
     for(let element of root.querySelectorAll("[data-feather]")) {
         let svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svgElem.classList = element.classList;
@@ -243,6 +337,24 @@ let apply_feather = (root) => {
 }
 
 let create_thing_element = (thing) => {
+    if(!["shelly", "shellyplus", "shellytrv", "switch"].includes(thing.type)) {
+        const elem = new ValueDisplay();
+        elem.setAttribute("name", thing.name);
+        elem.setAttribute("unit", thing_type_units[thing.type] || "?");
+        elem.setThingId(thing.id);
+        elem.setDisplayFunc(thing_type_display_funcs[thing.type] ?? null);
+
+        document.getElementById("content").appendChild(elem);
+        return elem;
+    } else if(thing.type !== "shellytrv") {
+        const elem = new OnOff();
+        elem.setAttribute("name", thing.name);
+        elem.setThingId(thing.id);
+
+        document.getElementById("content").appendChild(elem);
+        return elem;
+    }
+
     const template = document.getElementById("template-" + thing.type);
     if(!template) {
         console.warn("No template for type", thing.type);
@@ -826,8 +938,8 @@ const flash = (message, type = "success", actions = []) => {
 }
 
 const handle_message_things = (data) => {
-    data.things.forEach(thing => {
-        if(thing.id in things && things[thing.id].element) {
+    for(const thing of data.things) {
+        if(things.hasOwnProperty(thing.id) && things[thing.id].element) {
             const e = document.getElementById('thing-' + thing.id);
             e.querySelector('.thing-name span[name="name"]').innerText = thing.name;
             const currentView = decodeURI(window.location.hash.substr(1));
@@ -840,7 +952,7 @@ const handle_message_things = (data) => {
         let element = create_thing_element(thing);
         thing.element = element;
         things[thing.id] = thing;
-    });
+    }
 };
 
 const handle_message_states = (data) => {

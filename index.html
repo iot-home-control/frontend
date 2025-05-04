@@ -92,85 +92,23 @@
                 </div>
             </div>
         </template>
-        <template id="template-temperature">
-            <div class="thing thing-temperature">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> °C</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
+        <template id="template-value-display">
+            <div class="thing-detail">
+                <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
+                <div class="thing-value"><span name="value">-</span> <span name="unit">-</span></div>
+                <div class="thing-name"><span name="name">-</span></div>
             </div>
         </template>
-        <template id="template-humidity">
-            <div class="thing thing-humidity">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> %</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
+        <template id="template-thing-with-button">
+            <div class="thing-detail">
+                <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
+                <div class="thing-value">
+                    <span name="value" ><i class="feather-big" data-feather="power"></i></span>
                 </div>
+                <div class="thing-name"><span name="name">Anonymous</span></div>
             </div>
         </template>
-        <template id="template-soilmoisture">
-            <div class="thing thing-soilmoisture">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> %</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-pressure">
-            <div class="thing thing-pressure">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> mbar</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-shelly">
-            <div class="thing thing-shelly">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <input type="checkbox">
-                    <div class="thing-value">
-                        <span name="value"><i class="feather-big" data-feather="power"></i></span>
-                    </div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-shellyplus">
-            <div class="thing thing-shellyplus">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <input type="checkbox">
-                    <div class="thing-value">
-                        <span name="value"><i class="feather-big" data-feather="power"></i></span>
-                    </div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-shelly_temperature">
-            <div class="thing thing-temperature">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> °C</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-shelly_humidity">
-            <div class="thing thing-humidity">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> %</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-         <template id="template-shellytrv">
+        <template id="template-shellytrv">
             <div class="thing thing-trv">
                 <div class="thing-detail">
                     <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
@@ -186,36 +124,6 @@
                 </div>
             </div>
         </template>
-        <template id="template-switch">
-            <div class="thing thing-switch">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <input type="checkbox">
-                    <div class="thing-value">
-                        <span name="value" ><i class="feather-big" data-feather="power"></i></span>
-                    </div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-               <template id="template-shelly_power">
-            <div class="thing thing-power">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> W</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-shelly_energy">
-            <div class="thing thing-energy">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> Wh</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
         <template id="template-add">
             <div class="thing thing-add">
                 <div class="thing-detail">
@@ -224,33 +132,6 @@
                     </div>
                     <div class="thing-name"><span name="name">Add Thing
                     </span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-frischluftworks-co2">
-            <div class="thing thing-frischluftworks-co2">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> ppm</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-esp32_smartmeter_power">
-            <div class="thing thing-esp32_smartmeter_power">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> W</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
-                </div>
-            </div>
-        </template>
-        <template id="template-esp32_smartmeter_energy">
-            <div class="thing thing-esp32_smartmeter_energy">
-                <div class="thing-detail">
-                    <div class="edit"> <i class="feather" data-feather="edit"></i> </div>
-                    <div class="thing-value"><span name="value">-</span> kWh</div>
-                    <div class="thing-name"><span name="name">Anonymous</span></div>
                 </div>
             </div>
         </template>
