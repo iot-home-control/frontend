@@ -166,7 +166,7 @@ ul#bar {
     background-color: var(--enabled);
 }
 
-li#status, li#settings, li#logout, li#login, li#rules{
+li#status, li#settings, li#logout, li#login, li#rules, li#timers{
     display: block;
     color: var(--text);
     text-align: center;
@@ -268,8 +268,19 @@ li#status, li#settings, li#logout, li#login, li#rules{
     grid-column: span 2;
 }
 
-.control input[type=checkbox] {
+.four-columns {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-column-gap: 10px;
+}
+
+.dialog input[type=checkbox] {
     display: none;
+}
+
+.countdown {
+    width: 6em;
+    text-align: right;
 }
 
 .icon {
