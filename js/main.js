@@ -282,45 +282,61 @@ const energy_reading_unit_func = (value) => {
     }
 }
 
-const updaters = {
-    temperature: (e, s, b, f) => { e.setValue(f); },
-    humidity: (e, s, b, f) => { e.setValue(f); },
-    shelly_temperature: (e, s, b, f) => { e.setValue(f); },
-    shelly_humidity: (e, s, b, f) => { e.setValue(f); },
-    shellytrv: (e, s, b, f) => { e.setValue(f); },
-    soilmoisture: (e, s, b, f) => { e.setValue(f); },
-    pressure: (e, s, b, f) => { e.setValue(f); },
-    shelly: (e, s, b, f) => { e.setOn(b); },
-    shellyplus: (e, s, b, f) => { e.setOn(b); },
-    switch: (e, s, b, f) => { e.setOn(b); },
-    "frischluftworks-co2": (e, s, b, f) => { e.setValue(f); },
-    shelly_power: (e, s, b, f) => { e.setValue(f); },
-    shelly_energy: (e, s, b, f) => { e.setValue(f); },
-    esp32_smartmeter_power: (e, s, b, f) => { e.setValue(f); },
-    esp32_smartmeter_energy: (e, s, b, f) => { e.setValue(f); },
+function setFloatValue(e, s, b, f) {
+    e.setValue(f);
 }
 
-const thing_type_display_funcs = {
-    shelly_power: power_reading_unit_func,
-    shelly_energy: energy_reading_unit_func,
-    esp32_smartmeter_power: power_reading_unit_func,
-    esp32_smartmeter_energy: energy_reading_unit_func,
+function setOnOff(e, s, b, f) {
+    e.setOn(b);
+}
+
+const createValueDisplay = (thing) => {
+    const elem = new ValueDisplay();
+    elem.setAttribute("name", thing.name);
+    elem.setAttribute("unit", thingHandlersByType[thing.type]?.unit || "?");
+    elem.setThingId(thing.id);
+    elem.setDisplayFunc(thingHandlersByType[thing.type]?.displayFunc);
+
+    document.getElementById("content").appendChild(elem);
+    return elem;
 };
 
-const thing_type_units = {
-    temperature: "°C",
-    humidity: "%",
-    shelly_temperature: "°C",
-    shelly_humidity: "%",
-    soilmoisture: "%",
-    pressure: "mbar",
-    "frischluftworks-co2": "ppm",
-    shelly_power: "W",
-    shelly_energy: "Wh",
-    esp32_smartmeter_power: "W",
-    esp32_smartmeter_energy: "Wh",
-    shellytrv: "°C",
+const createOnOff = (thing) => {
+    const elem = new OnOff();
+    elem.setAttribute("name", thing.name);
+    elem.setThingId(thing.id);
+
+    document.getElementById("content").appendChild(elem);
+    return elem;
 };
+
+const createValuePlusMinus = (thing) => {
+    const elem = new ValuePlusMinus();
+    elem.setAttribute("name", thing.name);
+    elem.setAttribute("unit", thingHandlersByType[thing.type]?.unit || "?");
+    elem.setThingId(thing.id);
+
+    document.getElementById("content").appendChild(elem);
+    return elem;
+};
+
+const thingHandlersByType = {
+    temperature: {create: createValueDisplay, unit: "°C", update: setFloatValue, displayFunc: null},
+    humidity: {create: createValueDisplay, unit: "%", update: setFloatValue, displayFunc: null},
+    shelly_temperature: {create: createValueDisplay, unit: "°C", update: setFloatValue, displayFunc: null},
+    shelly_humidity: {create: createValueDisplay, unit: "%", update: setFloatValue, displayFunc: null},
+    shellytrv: {create: createValuePlusMinus, unit: "°C", update: setFloatValue, displayFunc: null},
+    soilmoisture: {create: createValueDisplay, unit: "%", update: setFloatValue, displayFunc: null},
+    pressure: {create: createValueDisplay, unit: "mbar", update: setFloatValue, displayFunc: null},
+    shelly: {create: createOnOff, unit: null, update: setOnOff, displayFunc: null},
+    shellyplus: {create: createOnOff, unit: null, update: setOnOff, displayFunc: null},
+    switch: {create: createOnOff, unit: null, update: setOnOff, displayFunc: null},
+    "frischluftworks-co2": {create: createValueDisplay, unit: "PPM", update: setFloatValue, displayFunc: null},
+    shelly_power: {create: createValueDisplay, unit: "W", update: setFloatValue, displayFunc: power_reading_unit_func},
+    shelly_energy: {create: createValueDisplay, unit: "Wh", update: setFloatValue, displayFunc: energy_reading_unit_func},
+    esp32_smartmeter_power: {create: createValueDisplay, unit: "W", update: setFloatValue, displayFunc: power_reading_unit_func},
+    esp32_smartmeter_energy: {create: createValueDisplay, unit: "Wh", update: setFloatValue, displayFunc: energy_reading_unit_func},
+}
 
 let pending_changes = {};
 
@@ -379,47 +395,6 @@ function show_thing_edit(value) {
     }
 }
 
-let plusminus_initializer = (thing, e) => {
-    let div = e.querySelector("div.thing-detail");
-    let plus = e.querySelector("span[name='plus']");
-    let minus = e.querySelector("span[name='minus']");
-    let value_ele = e.querySelector("span[name='value']");
-    let old_value;
-    let new_value;
-    let cb = () => {
-        socket.send(JSON.stringify({
-            type: "command",
-            id: thing.id,
-            value: new_value,
-        }));
-        add_pending_change(thing, setTimeout(() => {
-            console.log("timeout exceeded");
-            value_ele.innerText = new_value;
-            div.classList.remove("pending");
-        }, 1000));
-        value_ele.innerText = old_value;
-    };
-
-    plus.addEventListener('click', () => {
-        //plus.click()
-        div.classList.add("pending");
-        old_value = parseInt(value_ele.innerText)
-        new_value = old_value + 1
-        cb()
-    });
-    minus.addEventListener('click', () => {
-        //minus.click();
-        div.classList.add("pending");
-        old_value = parseInt(value_ele.innerText)
-        new_value = old_value - 1;
-        cb()
-    });
-};
-
-const initalizers = {
-    shellytrv: plusminus_initializer,
-};
-
 function apply_feather(root) {
     for(let element of root.querySelectorAll("[data-feather]")) {
         let svgElem = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -433,84 +408,17 @@ function apply_feather(root) {
     }
 }
 
-let create_thing_element = (thing) => {
-    if(!["shelly", "shellyplus", "shellytrv", "switch"].includes(thing.type)) {
-        const elem = new ValueDisplay();
-        elem.setAttribute("name", thing.name);
-        elem.setAttribute("unit", thing_type_units[thing.type] || "?");
-        elem.setThingId(thing.id);
-        elem.setDisplayFunc(thing_type_display_funcs[thing.type] ?? null);
-
-        document.getElementById("content").appendChild(elem);
-        return elem;
-    } else if(thing.type !== "shellytrv") {
-        const elem = new OnOff();
-        elem.setAttribute("name", thing.name);
-        elem.setThingId(thing.id);
-
-        document.getElementById("content").appendChild(elem);
-        return elem;
-    } else {
-        const elem = new ValuePlusMinus();
-        elem.setAttribute("name", thing.name);
-        elem.setAttribute("unit", thing_type_units[thing.type] || "?");
-        elem.setThingId(thing.id);
-
-        document.getElementById("content").appendChild(elem);
-        return elem;
-    }
-
-    const template = document.getElementById("template-" + thing.type);
-    if(!template) {
-        console.warn("No template for type", thing.type);
-        return null;
-    }
-
-    let e = template.content.cloneNode(true);
-    const e_id = "thing-" + thing.id
-    let thing_root = e.querySelector("div");
-    thing_root.id = e_id;
-    thing_root.classList.toggle('invisible', !thing.visible);
-
-    const edit = e.querySelector('.edit');
-    if(edit) {
-        edit.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            socket.send(JSON.stringify({
-                type: "create_or_edit",
-                id: thing.id,
-            }));
-            show_thing_edit(false);
-        });
-    }
-
-    let name_span = e.querySelector("span[name='name']");
-    if(name_span)
-        name_span.innerText = thing.name;
-
-    if(thing.type in initalizers) {
-        initalizers[thing.type](thing, e);
-    }
-
-    apply_feather(e);
-    const things = document.getElementById("content");
-    things.appendChild(e);
-
-    return document.getElementById(e_id);
-};
-
 let update_thing_state = (thing, state) => {
     // Things only have an element assigned to them if we support their type
     if(!thing.element) {
         return;
     }
-    if(!(thing.type in updaters)) {
+    if(!(thing.type in thingHandlersByType)) {
         console.error("Can't update thing of type", thing.type);
         return;
     }
     cancel_pending_changes(thing);
-    updaters[thing.type](thing.element, state.status_str, state.status_bool, state.status_float)
+    thingHandlersByType[thing.type].update(thing.element, state.status_str, state.status_bool, state.status_float)
 };
 
 let current_view = "";
@@ -1054,8 +962,11 @@ const handle_message_things = (data) => {
             things[thing.id] = thing;
             return;
         }
-        let element = create_thing_element(thing);
-        thing.element = element;
+        if(!thingHandlersByType.hasOwnProperty(thing.type)) {
+            console.warn("Unsupported thing type:", thing.type);
+            continue;
+        }
+        thing.element = thingHandlersByType[thing.type].create(thing);
         things[thing.id] = thing;
     }
 };
