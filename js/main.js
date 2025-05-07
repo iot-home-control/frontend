@@ -35,6 +35,7 @@ let countdowns = {}
 class HCElement extends HTMLElement
 {
     thingId = "not-set";
+    isPending = false;
 
     constructor(template_name) {
         super();
@@ -62,6 +63,11 @@ class HCElement extends HTMLElement
     setThingId(id) {
         this.thingId = id;
         this.id = "thing-" + id;
+    }
+
+    setPending(value) {
+        this.isPending = value;
+        this.detailElement.classList.toggle("pending", this.isPending);
     }
 }
 
@@ -117,7 +123,6 @@ class OnOff extends HCElement
 {
     static observedAttributes = ["name", "value"];
     #isOn = false;
-    #isPending = false;
 
     constructor() {
         super("template-thing-with-button");
@@ -142,11 +147,6 @@ class OnOff extends HCElement
         this.detailElement.classList.toggle("on", this.#isOn);
     }
 
-    setPending(value) {
-        this.#isPending = value;
-        this.detailElement.classList.toggle("pending", this.#isPending);
-    }
-
     attributeChangedCallback(name, oldValue, newValue) {
         if(name === "name") {
             this.nameElement.textContent = newValue;
@@ -156,8 +156,104 @@ class OnOff extends HCElement
     }
 }
 
+class ValuePlusMinus extends HCElement {
+    static observedAttributes = ["name", "value", "unit"];
+    #remoteValue;
+    #currentValue;
+    #displayFunc;
+    #currentUnit;
+    #submitTimeout;
+
+    constructor() {
+        super("template-value-plus-minus");
+
+        this.nameElement = this.querySelector("span[name=name]");
+        this.detailElement = this.querySelector(".thing-detail");
+        this.valueElement = this.querySelector("span[name=value]");
+        this.unitElement = this.querySelector("span[name=unit]");
+        this.plusElement = this.querySelector("[name=plus]");
+        this.minusElement = this.querySelector("[name=minus]");
+
+        const localValueUpdate = () => {
+            this.setPending(true);
+            if (this.#submitTimeout) {
+                clearTimeout(this.#submitTimeout);
+                console.log("Resetting submit timeout");
+            }
+            this.#submitTimeout = setTimeout(() => this.doSubmit(), 650);
+        };
+
+        this.plusElement.addEventListener("click", () => {
+            this.setLocalValue(this.#currentValue + 1);
+            localValueUpdate();
+        });
+
+        this.minusElement.addEventListener("click", () => {
+            this.setLocalValue(this.#currentValue - 1);
+            localValueUpdate();
+        });
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if(name === "name") {
+            this.nameElement.textContent = newValue;
+        } else if(name === "unit") {
+            this.#currentUnit = newValue;
+            this.#refresh();
+        } else if(name === "value") {
+            if(this.#submitTimeout)
+                clearTimeout(this.#submitTimeout);
+            this.#currentValue = parseInt(newValue);
+            this.#refresh();
+        }
+    }
+
+    setPending(value) {
+        super.setPending(value);
+        if(!value)
+            this.setLocalValue(this.#remoteValue);
+    }
+
+    setDisplayFunc(func) {
+        this.#displayFunc = func;
+    }
+
+    setLocalValue(value) {
+        this.#currentValue = value;
+        this.setAttribute("value", value);
+    }
+
+    setValue(value) {
+        this.setPending(false);
+        this.#remoteValue = value;
+        this.setAttribute("value", value);
+    }
+
+    #refresh() {
+        if(this.#displayFunc) {
+            const {unit, scaled} = this.#displayFunc(this.#currentValue);
+            this.valueElement.textContent = scaled;
+            this.unitElement.textContent = unit;
+        } else {
+            this.valueElement.textContent = this.#currentValue || "-";
+            this.unitElement.textContent = this.#currentUnit || "-";
+        }
+    }
+
+    doSubmit() {
+        console.log("Submitting", this.#currentValue);
+        socket.send(JSON.stringify({
+            type: "command",
+            id: this.thingId,
+            value: this.#currentValue,
+        }));
+        add_pending_change({id: this.thingId}, setTimeout(() => this.setPending(false), 5000));
+    }
+}
+
 customElements.define("hc-value-display", ValueDisplay);
 customElements.define("hc-on-off", OnOff);
+customElements.define("hc-value-plus-minus", ValuePlusMinus);
 
 
 let update_float_value = (e, f) => {
@@ -191,7 +287,7 @@ const updaters = {
     humidity: (e, s, b, f) => { e.setValue(f); },
     shelly_temperature: (e, s, b, f) => { e.setValue(f); },
     shelly_humidity: (e, s, b, f) => { e.setValue(f); },
-    shellytrv: (e, s, b, f) => { update_float_value(e, f); },
+    shellytrv: (e, s, b, f) => { e.setValue(f); },
     soilmoisture: (e, s, b, f) => { e.setValue(f); },
     pressure: (e, s, b, f) => { e.setValue(f); },
     shelly: (e, s, b, f) => { e.setOn(b); },
@@ -223,6 +319,7 @@ const thing_type_units = {
     shelly_energy: "Wh",
     esp32_smartmeter_power: "W",
     esp32_smartmeter_energy: "Wh",
+    shellytrv: "°C",
 };
 
 let pending_changes = {};
@@ -349,6 +446,14 @@ let create_thing_element = (thing) => {
     } else if(thing.type !== "shellytrv") {
         const elem = new OnOff();
         elem.setAttribute("name", thing.name);
+        elem.setThingId(thing.id);
+
+        document.getElementById("content").appendChild(elem);
+        return elem;
+    } else {
+        const elem = new ValuePlusMinus();
+        elem.setAttribute("name", thing.name);
+        elem.setAttribute("unit", thing_type_units[thing.type] || "?");
         elem.setThingId(thing.id);
 
         document.getElementById("content").appendChild(elem);
