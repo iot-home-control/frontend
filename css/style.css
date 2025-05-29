@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 }
 
 html {
-    font-family: sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
     background-color: var(--bg);
 }
 
