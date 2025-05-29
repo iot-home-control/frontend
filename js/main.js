@@ -256,11 +256,6 @@ customElements.define("hc-on-off", OnOff);
 customElements.define("hc-value-plus-minus", ValuePlusMinus);
 
 
-let update_float_value = (e, f) => {
-    let span = e.querySelector("span[name='value']");
-    span.innerText = f.toString();
-};
-
 const round_to_digits = (value, digits=0) => {
     const factor = Math.pow(10, digits);
     return Math.round(value * factor) / factor;

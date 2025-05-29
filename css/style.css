@@ -89,7 +89,6 @@ html {
 .thing-name {
     text-align: center;
     font-size: 10pt;
-    text-align: center;
     margin: auto;
     position: absolute;
     bottom: 5%;
@@ -97,15 +96,10 @@ html {
     transform: translateX(-50%);
 }
 
-.thing-shelly input[type="checkbox"], .thing-switch input[type="checkbox"], .thing-shellyplus input[type="checkbox"] {
-    display: none;
-}
-
 #top {
-    margin: 0;
+    margin: 0 0 0 10px;
     padding: 0;
     border-bottom: 1px solid var(--text);
-    margin-bottom: 10px;
 }
 
 #menu {
@@ -275,7 +269,7 @@ li#status, li#settings, li#logout, li#login, li#rules, li#timers{
 }
 
 .dialog input[type=checkbox] {
-    display: none;
+   display: none;
 }
 
 .countdown {
@@ -329,12 +323,6 @@ input:focus, button:focus, select:focus {
     border-bottom-color: rgb(13,13,13);
 }
 
-/*@media screen and (min-width: 600px) {
-    .dialog {
-        margin: 10rem;
-    }
-}*/
-
 .dialog label {
     margin-right: 1rem;
 }
@@ -342,9 +330,10 @@ input:focus, button:focus, select:focus {
 .edit {
     color: var(--text);
     position: absolute;
-    right: 0px;
-    top: 0px;
-    padding: 5px;    display: none;
+    right: 0;
+    top: 0;
+    padding: 5px;
+    display: none;
 }
 
 .on .edit {
@@ -356,7 +345,6 @@ input:focus, button:focus, select:focus {
 }
 
 .invisible-edit .thing-detail, .thing-add .thing-detail {
-    /*border-style: dashed;*/
     background: var(--bg-edit);
     color: var(--text);
 }
