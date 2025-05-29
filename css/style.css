@@ -243,11 +243,29 @@ li#status, li#settings, li#logout, li#login, li#rules, li#timers{
     margin: 1rem;
     background-color: var(--bg);
     border: 1px solid var(--text);
+}
+
+.dialog-content {
     display: grid;
     grid-template-columns: auto auto;
     justify-content: left;
     grid-row-gap: 5px;
     grid-column-gap: 5px;
+}
+
+.dialog-buttons {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.dialog-headline {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: end;
+    margin-bottom: 0.5rem;
 }
 
 .dialog .label {
@@ -286,7 +304,6 @@ li#status, li#settings, li#logout, li#login, li#rules, li#timers{
     stroke-width: 2px;
     stroke-linecap: round;
     stroke-linejoin: round;
-
 }
 
 input, button, select {

@@ -38,50 +38,10 @@
                 </div>
             </div>
         </template>
-
-        <template id="template-edit-thing">
-            <div class="center-outer">
-                <div class="dialog-frame">
-                    <div class="dialog dialog-edit-thing">
-                        <input type="hidden" name="thing-id"></input>
-                        <div class="label"><label for="thing-name">Name</label></div>
-                        <div class="control"><input type="text" name="thing-name"></input></div>
-                        <div class="label"><label for="thing-type">Type</label></div>
-                        <div class="control"><select name="thing-type"></select></div>
-                        <div class="label"><label for="thing-device-id">Device ID</label></div>
-                        <div class="control"><input type="text" name="thing-device-id"></input></div>
-                        <div class="label"><label for="thing-vnode">VNode</label></div>
-                        <div class="control"><input type="text" name="thing-vnode"></input></div>
-                        <div class="label"><label for="thing-ordering">Ordering</label></div>
-                        <div class="control"><input type="text" name="thing-ordering"></input></div>
-                        <div class="label"><label for="thing-visible">Visible</label></div>
-                        <div class="control"><select name="thing-visible"><option value="true">yes</option><option value="false">no</option></select></div>
-                        <div class="label"><label for="thing-views">In Views</label></div>
-                        <div class="control"><select name="thing-views" multiple></select></div>
-                        <div class="label"><button name="button-accept">Save</button></div>
-                        <div class="control"><button name="button-reject">Discard</button></div>
-                    </div>
-                </div>
-            </div>
-        </template>
         <template id="template-edit-view">
             <input type="hidden" name="view-id">
             <label for="view-name">Name</label><input type="text" name="view-name"><br/>
             <label for="view-things">Things</label><select name="view-things" multiple></select><br/>
-        </template>
-        <template id="template-login">
-            <div class="center-outer">
-                <div class="dialog-frame">
-                    <form class="dialog dialog-login">
-                        <div class="label"><label for="username">Username</label></div>
-                        <div class="control"><input type="text" name="username"/></div>
-                        <div class="label"><label for="password">Password</label></div>
-                        <div class="control"><input name="password" type="password"/></div>
-                        <div class="label"><button type="button" name="button-reject">Cancel</button></div>
-                        <div class="control"><button type="submit" name="button-accept">Login</button></div>
-                    </form>
-                </div>
-            </div>
         </template>
         <template id="template-dynamic-dialog">
             <div class="center-outer">
@@ -89,6 +49,15 @@
                     <div class="dialog">
                     <!-- Put content here. Via JS. -->
                     </div>
+                </div>
+            </div>
+        </template>
+        <template id="template-dialog">
+            <div class="center-outer">
+                <div class="dialog dialog-frame">
+                    <div class="dialog-headline"><span class="dialog-title"></span> <i class="dialog-close feather-big" data-feather="x"></i></div>
+                    <div class="dialog-content"></div>
+                    <div class="dialog-buttons"></div>
                 </div>
             </div>
         </template>

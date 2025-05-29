@@ -459,186 +459,331 @@ let describe_time_diff = (seconds) => {
         return (seconds/60/60/24/356).toFixed() + " years ago";
 }
 
-const show_thing_edit_dialog = (data) => {
-    const template = document.getElementById("template-edit-thing");
-    if(!template) {
-        console.warn("No template for type", thing.type);
-        return null;
+const activeDialogs = [];
+function closeDialogOfType(type) {
+    for (let i=activeDialogs.length-1; i>=0; i--){
+        if (activeDialogs[i].type === type) {
+            activeDialogs[i].close();
+            return true;
+        }
+    }
+    // console.debug("No active dialog of type", type);
+    return false;
+}
+
+function getDialogOfType(type) {
+    for (let i=activeDialogs.length-1; i>=0; i--){
+        if (activeDialogs[i].type === type) {
+            return activeDialogs[i];
+        }
+    }
+    // console.debug("No active dialog of type", type);
+    return null;
+}
+
+class HCDialog extends HTMLElement {
+    type = "base-dialog";
+
+    overlay;
+    content;
+
+    constructor(title, showCloseButton) {
+        super();
+
+        const template = document.getElementById("template-dialog");
+        this.appendChild(template.content.cloneNode(true));
+        this.content = this.querySelector(".dialog-content");
+
+
+        if (title !== undefined) {
+            this.setTitle(title);
+        }
+
+        apply_feather(this);
+
+        if (showCloseButton || showCloseButton === undefined) {
+            this.querySelector(".dialog-close")?.addEventListener("click", () => {
+                this.close();
+            });
+        } else {
+            this.querySelector(".dialog-close")?.remove();
+        }
     }
 
-    const e = template.content.cloneNode(true);
-
-    const thing_name = e.querySelector('*[name=thing-name]'); thing_name.value = data.name;
-    const thing_id = e.querySelector('*[name=thing-id]'); thing_id.value = data.id;
-    const type_select = e.querySelector('*[name=thing-type]');
-    for(const entry of data.types) {
-        const element = document.createElement('option');
-        element.value = entry.value;
-        element.text = entry.text;
-        element.selected = entry.value === data.thing_type;
-        type_select.add(element);
-    }
-    if(data.device_id) {
-        type_select.disabled = true;
-    }
-    const thing_device_id = e.querySelector('*[name=thing-device-id]'); thing_device_id.value = data.device_id;
-    const thing_vnode = e.querySelector('*[name=thing-vnode]'); thing_vnode.value = data.vnode;
-    const thing_visible = e.querySelector('*[name=thing-visible]'); thing_visible.options[data.visible ? 0 : 1].selected = true;
-    const views_select = e.querySelector('*[name=thing-views]');
-    const thing_ordering = e.querySelector('*[name=thing-ordering]'); thing_ordering.value = data.ordering;
-    for(const entry of data.views) {
-        const element = document.createElement('option');
-        element.value = entry.value;
-        element.text = entry.text;
-        element.selected = data.thing_views.find(element => element === entry.value);
-        views_select.add(element);
+    static makeElement(tag, attributes, props) {
+        const e = document.createElement(tag);
+        for(const [k, v] of Object.entries(attributes || {})) {
+            e.setAttribute(k, v);
+        }
+        for(const [k, v] of Object.entries(props || {})) {
+            e[k] = v;
+        }
+        return e;
     }
 
-    const overlay = document.createElement('div');
-    overlay.setAttribute('class', 'overlay');
+    addLabelAndControl(id, name, type, attrs, props) {
+        const label = HCDialog.makeElement("label", {"for": id}, {textContent: name});
+        const control = HCDialog.makeElement(type, Object.assign({id: id}, attrs), props);
+        this.content.appendChild(label);
+        this.content.appendChild(control);
+        return control;
+    }
 
-    e.querySelector('button[name=button-accept]').addEventListener('click', (btn) => {
-        btn.preventDefault();
+    setTitle(title) {
+        this.querySelector(".dialog-title").textContent = title;
+    }
+
+    addButton(id, text, handler) {
+        const buttons = this.querySelector(".dialog-buttons");
+        const button = document.createElement("button");
+        button.id = `button-${id}`;
+        button.name = id;
+        button.textContent = text;
+        button.type = "button";
+
+        if (typeof handler === "function") {
+            button.addEventListener("click", (e) => { handler.call(this, e); });
+        }
+
+        buttons.appendChild(button);
+        return button;
+    }
+
+    open() {
+        if (!this.overlay) {
+            this.overlay = document.createElement("div");
+            this.overlay.setAttribute('class', 'overlay');
+            this.overlay.appendChild(this);
+        }
+        if (!Array.from(document.body.children).includes(this.overlay)) {
+            document.body.appendChild(this.overlay);
+        }
+
+        activeDialogs.push(this);
+    }
+
+    close() {
+        if (this.overlay) {
+            document.body.removeChild(this.overlay);
+        }
+
+        if (activeDialogs.length > 0 && activeDialogs.at(-1) === this) {
+            activeDialogs.pop();
+        } else {
+            console.error("Asked to close non topmost dialog. We're at ", activeDialogs.indexOf(this)+1, "of", activeDialogs.length);
+        }
+    }
+}
+
+customElements.define("hc-dialog", HCDialog);
+
+class LoginDialog extends HCDialog {
+    type = "login-dialog";
+
+    usernameField;
+    passwordField;
+
+    constructor() {
+        super("Login", false);
+        const loginButton = this.addButton("login", "Login", this.doLogin);
+        loginButton.type="submit";
+        this.addButton("cancel", "Cancel", this.close);
+
+        const usernameLabel = HCDialog.makeElement("label", {"for": "username"}, {textContent: "Username"});
+        this.usernameField = HCDialog.makeElement("input", {type: "text", id: "username"})
+        const passwordLabel = HCDialog.makeElement("label", {"for": "password"}, {textContent: "Password"});
+        this.passwordField = HCDialog.makeElement("input", {type: "password", id: "password", autocomplete: "off"});
+
+        this.passwordField.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                this.doLogin();
+            }
+        });
+
+        this.content.appendChild(usernameLabel);
+        this.content.appendChild(this.usernameField);
+        this.content.appendChild(passwordLabel);
+        this.content.appendChild(this.passwordField);
+    }
+
+    static openNewDialog() {
+        new LoginDialog().open();
+    }
+
+    doLogin() {
+        if (!this.usernameField.value || !this.passwordField.value)
+            return;
+
+        socket.send(JSON.stringify({
+            type: "authenticate",
+            username: this.usernameField.value,
+            password: this.passwordField.value,
+        }));
+    }
+
+    open() {
+        super.open();
+        this.usernameField.value = "";
+        this.passwordField.value = "";
+        this.usernameField.focus();
+    }
+}
+
+class ThingEditDialog extends HCDialog {
+    type = "thing-edit";
+
+    thingId; // string
+    nameField; // string
+    typeField; // select
+    deviceIdField; // string
+    vnodeIdField; // number
+    orderingField; // number
+    visibleField; // bool
+    viewsField; // select multiple
+
+    constructor(thing) {
+        super("Edit: " + thing.name, false);
+
+        this.thingId = thing.id;
+
+        this.addButton("save", "Save", this.save);
+        this.addButton("discard", "Discard", this.close);
+
+
+        this.nameField = this.addLabelAndControl("thingName", "Name", "input", {type: "text"});
+        this.typeField = this.addLabelAndControl("thingType", "Type", "select");
+        this.deviceIdField = this.addLabelAndControl("thingDeviceId", "Device ID", "input", {type: "text"});
+        this.vnodeIdField = this.addLabelAndControl("thingVNodeId", "VNode", "input", {type: "text"});
+        this.orderingField = this.addLabelAndControl("thingOrdering", "Ordering", "input", {type: "text"});
+        this.visibleField = this.addLabelAndControl("thingVisible", "Visible", "select");
+        this.viewsField = this.addLabelAndControl("thingViews", "In Views", "select", {multiple: ""});
+
+        this.visibleField.options.add(new Option("yes", "true"));
+        this.visibleField.options.add(new Option("no", "false"));
+
+        this.setData(thing);
+    }
+
+    static openNewDialog(thing) {
+        new ThingEditDialog(thing).open();
+    }
+
+    setData(thing) {
+        if (thing.id !== this.thingId) {
+            console.error("Wrong thing id passed to dialog. We have", this.thingId, "data has", thing.id);
+            return;
+        }
+
+        this.nameField.value = thing.name;
+
+        if (thing.types) {
+            while (this.typeField.options.length) {
+                this.typeField.options.remove(0);
+            }
+            for (const type of thing.types) {
+                this.typeField.options.add(new Option(type.text, type.value, undefined, type.value === thing.thing_type));
+            }
+        } else {
+            this.typeField.value = thing.type;
+        }
+
+        this.deviceIdField.value = thing.device_id;
+        this.vnodeIdField.value = thing.vnode;
+        this.orderingField.value = thing.ordering;
+        this.visibleField.value = JSON.stringify(thing.visible);
+
+        if (thing.views) {
+            while (this.viewsField.options.length)
+                this.viewsField.options.remove(0);
+            for (let i=0; i<thing.views.length; i++) {
+                const view = thing.views[i];
+                this.viewsField.options.add(new Option(view.text, view.value, undefined, thing.thing_views.includes(view.value)));
+            }
+        }
+    }
+
+    save() {
         socket.send(JSON.stringify({
             type: "edit_save",
             editing: "thing",
             data: {
-                id: thing_id.value,
-                name: thing_name.value,
-                thing_type: type_select.value,
-                device_id: thing_device_id.value,
-                vnode: thing_vnode.value,
-                ordering: thing_ordering.value,
-                visible: thing_visible.value === "true",
-                views: Array.from(views_select.selectedOptions).map(o => ({value: o.value, text: o.text})),
-            },
+                id: this.thingId,
+                name: this.nameField.value,
+                thing_type: this.typeField.value,
+                device_id: this.deviceIdField.value,
+                vnode: this.vnodeIdField.value,
+                ordering: this.orderingField.value,
+                visible: this.visibleField.value === "true",
+                views: Array.from(this.viewsField.selectedOptions).map(o => ({value: o.value, text: o.text})),
+            }
         }));
-    });
-    e.querySelector('button[name=button-reject]').addEventListener('click', (btn) => {
-        btn.preventDefault();
-        overlay.style.display = 'none';
-        overlay.parentNode.removeChild(overlay);
-    });
-
-    overlay.appendChild(e);
-
-    return overlay;
+    }
 }
 
-const make_login_dialog = (data) => {
-    const template = document.getElementById("template-login");
-    if(!template) {
-        return null;
+class ToggleRulesDialog extends HCDialog {
+    type = "toggle-rules";
+
+    controls = {};
+
+    constructor() {
+        super("Rules");
     }
 
-    const e = template.content.cloneNode(true);
+    static openNewDialog() {
+        new ToggleRulesDialog().open();
+    }
 
-    const username_input = e.querySelector('*[name=username]');
-    const password_input = e.querySelector('*[name=password]');
+    open() {
+        super.open();
+        socket.send(JSON.stringify({
+            type: "rules"
+        }));
+    }
 
-    const overlay = document.createElement('div');
-    overlay.setAttribute('class', 'overlay');
+    #updateIcon(slug){
+        const {container, state} = this.controls[slug];
+        container.querySelector("svg")?.remove();
+        container.appendChild(HCDialog.makeElement("i", {
+            "class": "icon",
+            "data-feather": state ? "check-square" : "square"
+        }));
+        apply_feather(container);
+    }
 
-    e.querySelector('button[name=button-accept]').addEventListener('click', (btn) => {
-        btn.preventDefault();
-        authenticate(username_input.value, password_input.value)
-    });
-    e.querySelector('button[name=button-reject]').addEventListener('click', (btn) => {
-        btn.preventDefault();
-        overlay.style.display = 'none';
-        overlay.parentNode.removeChild(overlay);
-    });
+    setData(rules) {
 
-    overlay.appendChild(e);
-    return overlay;
-}
+        for (const rule of rules) {
+            const slug = "rule-" + rule.name.toLowerCase().replaceAll(/\s+/g, "-");
 
-const show_login_dialog = () => {
-    current_overlay = make_login_dialog();
-    document.getElementsByTagName('body')[0].appendChild(current_overlay);
-    current_overlay.querySelector('*[name=username]').focus()
-}
+            if (!this.controls.hasOwnProperty(slug)) {
+                const label = HCDialog.makeElement("label", {"for": slug}, {textContent: rule.name});
+                const container = document.createElement("span");
 
-let authenticate = (username, password) => {
-    socket.send(JSON.stringify({
-        type: "authenticate",
-        username: username,
-        password: password,
-    }));
-}
+                this.content.appendChild(label);
+                this.content.appendChild(container);
 
-let close_dialog = () => {
-    current_overlay.parentNode.removeChild(current_overlay);
-    current_overlay = null;
-    stop_all_countdowns()
-}
+                this.controls[slug] = {state: null, container: container};
 
+                const toggleRule = () => {
+                    socket.send(JSON.stringify({
+                            type: "rules",
+                            data: {[rule.name]: {enabled: !this.controls[slug].state}}
+                        }));
+                };
 
-let show_rules = () => {
-    current_overlay = show_dynamic_dialog("Rules")
-    document.getElementsByTagName('body')[0].appendChild(current_overlay);
-    socket.send(JSON.stringify({
-        type: "rules"}))
-}
+                label.addEventListener("click", toggleRule);
+                container.addEventListener("click", toggleRule);
+            }
 
-
-let update_rule_state = (rule_name, state) => {
-    socket.send(JSON.stringify({
-        type: "rules",
-        data: {[rule_name]: {enabled: state}}
-    }))
-}
-
-let update_rules_dialog = (data) => {
-    const content = document.querySelector(".dialog")
-    const close_button = content.querySelector("button")
-    data.forEach((rule) => {
-        const rule_checkbox = content.querySelector(`input[name="${rule.name}"]`)
-        if(rule_checkbox) {
-            rule_checkbox.checked = rule.state;
-            const parent = rule_checkbox.parentElement
-            parent.querySelector("svg")?.remove()
-            const icon = document.createElement("i")
-            icon.classList.add("icon")
-            icon.setAttribute("data-feather", rule_checkbox.checked ? "check-square" : "square" );
-            parent.appendChild(icon)
-            apply_feather(parent)
-
-        } else {
-    //<div class="label"><label for="thing-name">Name</label></div>
-    //<div class="control"><input type="text" name="thing-name"></input></div>
-            const label_div = document.createElement("div")
-            label_div.classList.add("label")
-            const control_div = document.createElement("div")
-            control_div.classList.add("control")
-
-            const wrapper = document.createElement("span");
-            const label = document.createElement("label")
-            const checkbox = document.createElement("input")
-            checkbox.type = "checkbox"
-            checkbox.name = rule.name
-            checkbox.checked = rule.state
-            wrapper.addEventListener("click", () => {
-                const new_state = !checkbox.checked
-                const rule_name = checkbox.name
-                console.log("New rule state ", rule_name, new_state)
-                update_rule_state(rule_name, new_state);
-            });
-            const icon = document.createElement("i")
-            icon.classList.add("icon")
-            icon.setAttribute("data-feather", checkbox.checked ? "check-square" : "square" );
-            label.innerText = rule.name
-            label.htmlFor = checkbox.name
-            label_div.appendChild(label)
-            wrapper.append(checkbox);
-            wrapper.append(icon);
-            control_div.appendChild(wrapper)
-            content.insertBefore(label_div, close_button)
-            content.insertBefore(control_div, close_button)
-            apply_feather(content)
+            this.controls[slug].state = rule.state !== null ? rule.state : true;
+            this.#updateIcon(slug);
         }
-    });
-};
+    }
+}
+
+customElements.define("hc-login-dialog", LoginDialog);
+customElements.define("hc-thing-edit-dialog", ThingEditDialog);
+customElements.define("hc-toggle-rules-dialog", ToggleRulesDialog);
 
 let show_dynamic_dialog = (title, show_save_button = false) => {
     const template = document.getElementById("template-dynamic-dialog");
@@ -664,7 +809,11 @@ let show_dynamic_dialog = (title, show_save_button = false) => {
 
     const closeButton = document.createElement("button")
     show_save_button ? closeButton.classList.add("control") : closeButton.classList.add("single");
-    closeButton.addEventListener("click", close_dialog)
+    closeButton.addEventListener("click", () => {
+        current_overlay.parentNode.removeChild(current_overlay);
+        current_overlay = null;
+        stop_all_countdowns()
+    });
     closeButton.name = "close"
     closeButton.innerHTML = 'Close'
     content.appendChild(closeButton)
@@ -1044,18 +1193,15 @@ const handle_message_last_seen = (data) => {
 
 const handle_message_edit_data = (data) => {
     if(data.kind === "thing") {
-        current_overlay = show_thing_edit_dialog(data.data);
-        document.getElementsByTagName('body')[0].appendChild(current_overlay);
+        ThingEditDialog.openNewDialog(data.data);
     }
 };
 
 const handle_message_edit_ok = (data) => {
-    if(!current_overlay)
-        return;
-
-    current_overlay.parentNode.removeChild(current_overlay);
-    current_overlay = null;
-    flash("Thing successfully saved.")
+    if(data.kind === "thing") {
+        closeDialogOfType("thing-edit");
+        flash("Thing successfully saved.")
+    }
 };
 
 const handle_message_cookie = (data) => {
@@ -1063,15 +1209,14 @@ const handle_message_cookie = (data) => {
 };
 
 const handle_message_auth_required = (data) => {
-    flash("You need to login to use this function.", "error", [{text: "Login", action: show_login_dialog}]);
+    flash("You need to login to use this function.", "error", [{text: "Login", action: LoginDialog.openNewDialog}]);
 };
 
 const handle_message_auth_ok = (data) => {
-    if(current_overlay) {
-        current_overlay.parentNode.removeChild(current_overlay);
-        current_overlay = null;
-        flash("Login succeded.")
+    if (closeDialogOfType("login-dialog")) {
+        flash("Login succeeded.")
     }
+
     const authenticated = data.level >= 2
     document.getElementById("login").classList.toggle("invisible", authenticated);
     document.getElementById("logout").classList.toggle("invisible", !authenticated);
@@ -1081,15 +1226,12 @@ const handle_message_auth_ok = (data) => {
 };
 
 const handle_message_auth_failed = (data) => {
-    if(current_overlay) {
-        current_overlay.parentNode.removeChild(current_overlay);
-        current_overlay = null;
-    }
-    flash("Login failed.", "error", [{text: "Login", action: show_login_dialog}]);
+    closeDialogOfType("login-dialog");
+    flash("Login failed.", "error", [{text: "Login", action: LoginDialog.openNewDialog}]);
 };
 
 const handle_message_rules = (data) => {
-    update_rules_dialog(data.value);
+    getDialogOfType("toggle-rules")?.setData(data.value);
 };
 
 const handle_message_timers = (data) => {
@@ -1214,17 +1356,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector('#settings').addEventListener('click', (e) => {
         show_thing_edit(!edit_mode_active);
     });
-    document.querySelector('#login').addEventListener('click', show_login_dialog);
+    document.querySelector('#login').addEventListener('click', LoginDialog.openNewDialog);
     document.querySelector('#logout').addEventListener('click', (e) => {
         document.cookie = "auth=";
         location.reload()
     });
-    document.querySelector('#rules').addEventListener('click', (e) => {
-        show_rules()
-    })
+    document.querySelector('#rules').addEventListener('click', ToggleRulesDialog.openNewDialog);
+
     document.querySelector('#timers').addEventListener('click', (e) => {
         show_timers()
-    })
+    });
 });
 
 document.addEventListener('visibilitychange', () => {
