@@ -331,7 +331,7 @@ const thingHandlersByType = {
     shelly: {create: createOnOff, unit: null, update: setOnOff, displayFunc: null},
     shellyplus: {create: createOnOff, unit: null, update: setOnOff, displayFunc: null},
     switch: {create: createOnOff, unit: null, update: setOnOff, displayFunc: null},
-    "frischluftworks-co2": {create: createValueDisplay, unit: "PPM", update: setFloatValue, displayFunc: null},
+    "frischluftworks-co2": {create: createValueDisplay, unit: "ppm", update: setFloatValue, displayFunc: null},
     shelly_power: {create: createValueDisplay, unit: "W", update: setFloatValue, displayFunc: power_reading_unit_func},
     shelly_energy: {create: createValueDisplay, unit: "Wh", update: setFloatValue, displayFunc: energy_reading_unit_func},
     esp32_smartmeter_power: {create: createValueDisplay, unit: "W", update: setFloatValue, displayFunc: power_reading_unit_func},
