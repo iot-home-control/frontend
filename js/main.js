@@ -271,7 +271,7 @@ const power_reading_unit_func = (value) => {
 
 const energy_reading_unit_func = (value) => {
     if (Math.abs(value) < 1000) {
-        return { unit: "Wh", scaled: value };
+        return { unit: "Wh", scaled: round_to_digits(value, 2) };
     } else {
         return { unit: "kWh", scaled: round_to_digits(value / 1000, 2) }
     }
