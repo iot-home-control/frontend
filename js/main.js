@@ -532,12 +532,23 @@ class HCDialog extends HTMLElement {
         this.querySelector(".dialog-title").textContent = title;
     }
 
-    addButton(id, text, handler) {
+    addButton(id, text, handler, icon=undefined) {
         const buttons = this.querySelector(".dialog-buttons");
         const button = document.createElement("button");
         button.id = `button-${id}`;
         button.name = id;
-        button.textContent = text;
+        if (icon) {
+            const t = document.createTextNode(text);
+            const i = HCDialog.makeElement("i", {
+                "class": "icon",
+                "data-feather": icon,
+            });
+            button.appendChild(i);
+            button.appendChild(t);
+            apply_feather(button);
+        } else {
+            button.textContent = text;
+        }
         button.type = "button";
 
         if (typeof handler === "function") {
@@ -738,7 +749,7 @@ class ToggleRulesDialog extends HCDialog {
             type: "rules"
         }));
     }
-
+timer
     #updateIcon(slug){
         const {container, state} = this.controls[slug];
         container.querySelector("svg")?.remove();
@@ -785,6 +796,7 @@ class ManageTimersDialog extends HCDialog {
     ruleNames;
 
     controls = {};
+    timers = {};
 
     constructor() {
         super("Timers");
@@ -809,11 +821,27 @@ class ManageTimersDialog extends HCDialog {
     }
 
     newTimer() {
-
+        EditOrAddTimerDialog.openNewDialog(this, null, this.ruleNames);
     }
 
     editTimer(slug) {
-        EditTimerDialog.openNewDialog(this, slug);
+        EditOrAddTimerDialog.openNewDialog(this, this.timers[slug], this.ruleNames);
+    }
+
+    removeTimer(slug) {
+        if (!this.controls[slug])
+            return;
+
+        this.content.removeChild(this.controls[slug].label);
+        this.content.removeChild(this.controls[slug].countdown);
+        this.content.removeChild(this.controls[slug].checkbox);
+        this.content.removeChild(this.controls[slug].edit);
+
+        if (this.controls[slug].intervalId)
+            clearInterval(this.controls[slug].intervalId);
+
+        delete this.timers[slug];
+        delete this.controls[slug];
     }
 
     #updateIcon(slug){
@@ -826,13 +854,65 @@ class ManageTimersDialog extends HCDialog {
         apply_feather(checkbox);
     }
 
+    #renderRemainingTime(slug) {
+        if (!this.controls[slug]?.schedule)
+            return;
+
+        const countdown_date = new Date(this.controls[slug].schedule);
+        const now = new Date().getTime();
+        // Convert from ms to seconds
+        const distance = Math.round((countdown_date - now) / 1000);
+
+        const days = Math.trunc(distance / (24 * 60 * 60))
+        const hours = leading_zeros(Math.trunc(distance % (24 * 60 * 60) / (60 * 60)))
+        const minutes = leading_zeros(Math.trunc(distance % (60 * 60) / 60))
+        const seconds = leading_zeros(Math.trunc(distance % 60))
+
+        let date_str = ""
+        if (days > 0) {
+            date_str = days + "d"
+        } else {
+            if(hours > 0 ) {
+                date_str = hours + "h"
+            }
+            if(minutes > 0  ||  hours > 0) {
+                date_str = date_str + " " + minutes + "m"
+            }
+            if(seconds > 0 ||  hours > 0 || minutes > 0 ) {
+                date_str = date_str + " " + seconds + "s"
+            }
+        }
+        if(date_str === "") {
+            date_str = "pending"
+        }
+
+        this.controls[slug].countdown.textContent = date_str;
+    }
+
+    #setCountdown(slug) {
+        if (!this.controls[slug]?.schedule)
+            return;
+
+        if (this.controls[slug].intervalId) {
+            clearInterval(this.controls[slug].intervalId);
+            this.controls[slug].intervalId = null;
+        }
+
+        this.controls[slug].intervalId = setInterval(() => this.#renderRemainingTime(slug), 1000);
+        this.#renderRemainingTime(slug);
+    }
+
     setData(timers, ruleNames) {
+        const previousTimerSlugs = new Set(Object.keys(this.controls));
+        const currentTimerSlugs = new Set();
+
         this.ruleNames = ruleNames;
         for(const timer of timers) {
             const slug = "timer-" + timer.id.toLowerCase().replaceAll(/\s+/g, "-");
+            currentTimerSlugs.add(slug);
 
             if(!this.controls.hasOwnProperty(slug)) {
-                const label = HCDialog.makeElement("label", {"for": slug}, {textContent: timer.id});
+                const label = HCDialog.makeElement("label", {"for": slug}, {textContent: timer.display_name || timer.id});
                 const checkboxDiv = document.createElement("div");
                 checkboxDiv.classList.add("checkbox");
                 const editDiv = document.createElement("div");
@@ -840,11 +920,21 @@ class ManageTimersDialog extends HCDialog {
                 editDiv.appendChild(edit);
                 apply_feather(editDiv);
 
+                const countdownDiv = document.createElement("div");
+                const countdownSpan = document.createElement("span");
+                countdownDiv.appendChild(countdownSpan);
+                countdownSpan.textContent = "…";
+
                 this.content.appendChild(label);
+                this.content.appendChild(countdownDiv);
                 this.content.appendChild(checkboxDiv);
                 this.content.appendChild(editDiv);
 
-                this.controls[slug] = {state: null, checkbox: checkboxDiv, edit: editDiv};
+                this.controls[slug] = {
+                    state: null,
+                    label: label, checkbox: checkboxDiv, edit: editDiv, countdown: countdownSpan,
+                    schedule: timer.schedule, intervalId: null,
+                };
 
                 const toggleTimer = () => {
                     socket.send(JSON.stringify({
@@ -856,33 +946,97 @@ class ManageTimersDialog extends HCDialog {
                 label.addEventListener("click", toggleTimer);
                 checkboxDiv.addEventListener("click", toggleTimer);
                 editDiv.addEventListener("click", () => this.editTimer(slug))
+
+                console.log("Added new timer", slug);
             }
 
+            this.timers[slug] = Object.assign(timer, {slug: slug});
             this.controls[slug].state = timer.enabled !== null ? timer.enabled : true;
+            this.#setCountdown(slug);
             this.#updateIcon(slug);
+        }
+
+        const removedSlugs = previousTimerSlugs.difference(currentTimerSlugs);
+        for (const slug of removedSlugs) {
+            console.log("Cleaning up removed timer", slug);
+            this.removeTimer(slug);
         }
     }
 }
 
-class EditTimerDialog extends HCDialog {
-    type = "edit-timer";
+class EditOrAddTimerDialog extends HCDialog {
+    type = "edit-or-add-timer";
 
     parent;
     slug;
 
-    constructor(parent, slug) {
-        super("Edit");
+    constructor(parent, timer, isEdit, ruleNames) {
+        super(isEdit ? "Edit" : "Add");
         this.parent = parent;
-        this.slug = slug;
+        this.slug = timer?.slug;
+        this.id = timer?.id;
 
-        this.addLabelAndControl("id", "Timer ID", "input", {type: "text"}, {value: "ID HERE"});
-        this.addLabelAndControl("scheduled", "Scheduled", "input", {type: "datetime-local"});
-        const enabled = this.addLabelAndControl("enabled", "Enabled", "select");
-        const rule = this.addLabelAndControl("rule", "Rule", "select");
+        this.timer_name = this.addLabelAndControl("name", "Timer Name", "input", {type: "text", "placeholder": "Timer name"}, {value: timer?.display_name || ""});
+        this.timer_schedule = this.addLabelAndControl("scheduled", "Scheduled", "input", {type: "datetime-local"}, {value: timer ? new Date(timer.schedule) : null});
+        this.timer_enabled = this.addLabelAndControl("enabled", "Enabled", "select");
+        this.timer_enabled.options.add(new Option("Enabled", "true", true, timer?.enabled === true));
+        this.timer_enabled.options.add(new Option("Disabled", "false", false, timer?.enabled === false));
+
+        this.timer_rule = this.addLabelAndControl("rule", "Rule", "select");
+        this.timer_rule.options.add(new Option("Please select", "-1", true));
+        for (const [name, index] of Object.entries(ruleNames)) {
+            this.timer_rule.options.add(new Option(name, index.toString(), false, timer?.rule_id === index));
+        }
+
+        this.browser_tz = new Date(Date.now()).getTimezoneOffset(); // Browser timezone
+        this.schedule_tz = this.browser_tz;
+
+        if(timer?.schedule) {
+            const js_date = new Date(timer.schedule);
+            this.schedule_tz = js_date.getTimezoneOffset();
+            const timezone_corrected_date = new Date(js_date.getTime() - (this.schedule_tz * 60000));
+            this.timer_schedule.value = timezone_corrected_date.toISOString().slice(0, 16);
+        }
+
+        if (isEdit) {
+            this.addButton("save", "Save", this.saveTimer);
+        }
+
+        this.addButton("discard", "Discard changes", this.close);
+
+        if (isEdit)
+            this.addButton("delete", "Delete", this.deleteTimer);
+        else
+            this.addButton("create", "Create", this.saveTimer);
+
     }
 
-    static openNewDialog() {
-        new ManageTimersDialog().open();
+    deleteTimer() {
+        if (!confirm("Really delete this timer?"))
+            return;
+
+        alert("TODO: Make this work");
+    }
+
+    saveTimer() {
+        const timer_schedule = new Date(this.timer_schedule.value +"+"+(this.schedule_tz / -60).toString().padStart(2, '0')+":00")
+
+        const timer_data = {
+            id: this.id || this.timer_name.value,
+            schedule: timer_schedule.toISOString(),
+            enabled: this.timer_enabled.value === "true",
+            rule_id: parseInt(this.timer_rule.value),
+        };
+
+        socket.send(JSON.stringify({
+            type: "timer",
+            data: timer_data
+        }));
+        this.close();
+    }
+
+    static openNewDialog(parent, timer, ruleNames) {
+        new EditOrAddTimerDialog(parent, timer, !!timer, ruleNames).open();
     }
 }
 
@@ -890,7 +1044,7 @@ customElements.define("hc-login-dialog", LoginDialog);
 customElements.define("hc-thing-edit-dialog", ThingEditDialog);
 customElements.define("hc-toggle-rules-dialog", ToggleRulesDialog);
 customElements.define("hc-manage-timers-dialog", ManageTimersDialog);
-customElements.define("hc-edit-timer-dialog", EditTimerDialog);
+customElements.define("hc-edit-timer-dialog", EditOrAddTimerDialog);
 
 let show_dynamic_dialog = (title, show_save_button = false) => {
     const template = document.getElementById("template-dynamic-dialog");
@@ -941,9 +1095,10 @@ let show_timers = () => {
     }))
 }
 
-  let leading_zeros = (value, number_of_digits=2) => {
-        return ("0".repeat(number_of_digits).concat(value)).slice(number_of_digits * -1)
-    }
+let leading_zeros = (value, number_of_digits=2) => {
+    return value.toString().padStart(number_of_digits, "0");
+    // return ("0".repeat(number_of_digits).concat(value)).slice(number_of_digits * -1)
+}
 
 let add_countdown = (name, element, schedule) => {
 
