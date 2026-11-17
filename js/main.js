@@ -164,8 +164,8 @@ class ValuePlusMinus extends HCElement {
     #currentUnit;
     #submitTimeout;
 
-    constructor() {
-        super("template-value-plus-minus");
+    constructor(template_id = "template-value-plus-minus") {
+        super(template_id);
 
         this.nameElement = this.querySelector("span[name=name]");
         this.detailElement = this.querySelector(".thing-detail");
@@ -184,12 +184,12 @@ class ValuePlusMinus extends HCElement {
         };
 
         this.plusElement.addEventListener("click", () => {
-            this.setLocalValue(this.#currentValue + 1);
+            this.setLocalValue(this.#currentValue + this.step);
             localValueUpdate();
         });
 
         this.minusElement.addEventListener("click", () => {
-            this.setLocalValue(this.#currentValue - 1);
+            this.setLocalValue(this.#currentValue - this.step);
             localValueUpdate();
         });
     }
@@ -229,6 +229,10 @@ class ValuePlusMinus extends HCElement {
         this.setAttribute("value", value);
     }
 
+    get currentValue() {
+        return this.#currentValue;
+    }
+
     #refresh() {
         if(this.#displayFunc) {
             const {unit, scaled} = this.#displayFunc(this.#currentValue);
@@ -251,9 +255,45 @@ class ValuePlusMinus extends HCElement {
     }
 }
 
+class OnOffPlusMinus extends ValuePlusMinus {
+    #isOn = false;
+
+    constructor() {
+        super("template-on-off-plus-minus");
+        this.OnOffElement = this.querySelector("[name=power]")
+        this.OnOffElement.addEventListener("click", () => {
+            this.setPending(true);
+            socket.send(JSON.stringify({
+                type: "command",
+                id: this.thingId,
+                value: {on: !this.#isOn},
+            }));
+            add_pending_change({id: this.thingId}, setTimeout(() => this.setPending(false), 1000));
+        });
+    }
+
+    setOn(value) {
+        this.setPending(false);
+        this.#isOn = value;
+        this.detailElement.classList.toggle("on", this.#isOn);
+    }
+
+     doSubmit() {
+        console.log("Submitting", this.currentValue);
+        socket.send(JSON.stringify({
+            type: "command",
+            id: this.thingId,
+            value: {brightness: this.currentValue},
+        }));
+        add_pending_change({id: this.thingId}, setTimeout(() => this.setPending(false), 5000));
+    }
+
+}
+
 customElements.define("hc-value-display", ValueDisplay);
 customElements.define("hc-on-off", OnOff);
 customElements.define("hc-value-plus-minus", ValuePlusMinus);
+customElements.define("hc-on-off-plus-minus", OnOffPlusMinus);
 
 
 const round_to_digits = (value, digits=0) => {
@@ -285,6 +325,12 @@ function setOnOff(e, s, b, f) {
     e.setOn(b);
 }
 
+function setJSONValue(e, s, b, f) {
+    e.setOn(s.on);
+    e.setValue(s.brightness)
+}
+
+
 const createValueDisplay = (thing) => {
     const elem = new ValueDisplay();
     elem.setAttribute("name", thing.name);
@@ -310,6 +356,18 @@ const createValuePlusMinus = (thing) => {
     elem.setAttribute("name", thing.name);
     elem.setAttribute("unit", thingHandlersByType[thing.type]?.unit || "?");
     elem.setThingId(thing.id);
+    elem.step = 1;
+
+    document.getElementById("content").appendChild(elem);
+    return elem;
+};
+
+const createOnOffPlusMinus = (thing) => {
+    const elem = new OnOffPlusMinus();
+    elem.setAttribute("name", thing.name);
+    elem.setAttribute("unit", thingHandlersByType[thing.type]?.unit || "?");
+    elem.setThingId(thing.id);
+    elem.step = 5;
 
     document.getElementById("content").appendChild(elem);
     return elem;
@@ -321,6 +379,7 @@ const thingHandlersByType = {
     shelly_temperature: {create: createValueDisplay, unit: "°C", update: setFloatValue, displayFunc: null},
     shelly_humidity: {create: createValueDisplay, unit: "%", update: setFloatValue, displayFunc: null},
     shellytrv: {create: createValuePlusMinus, unit: "°C", update: setFloatValue, displayFunc: null},
+    shellydimmer: {create: createOnOffPlusMinus, unit: "%", update: setJSONValue, displayFunc: null},
     soilmoisture: {create: createValueDisplay, unit: "%", update: setFloatValue, displayFunc: null},
     pressure: {create: createValueDisplay, unit: "mbar", update: setFloatValue, displayFunc: null},
     shelly: {create: createOnOff, unit: null, update: setOnOff, displayFunc: null},
@@ -413,7 +472,7 @@ let update_thing_state = (thing, state) => {
         return;
     }
     cancel_pending_changes(thing);
-    thingHandlersByType[thing.type].update(thing.element, state.status_str, state.status_bool, state.status_float)
+    thingHandlersByType[thing.type].update(thing.element, state.status_json, state.status_bool, state.status_float)
 };
 
 let current_view = "";
