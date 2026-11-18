@@ -339,6 +339,29 @@ input:focus, button:focus, select:focus {
 .on .edit {
     color: var(--bg);
 }
+.thing-brightness {
+    display: grid;
+    grid-template-columns: 18pt minmax(0, 1fr) 18pt;
+    align-items: center;
+    margin-top: 0.25rem;
+    font-size: 11pt;
+}
+
+.thing-brightness-value {
+    display: inline-flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.1em;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.thing-brightness > span[name=minus],
+.thing-brightness > span[name=plus] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 .invisible {
     display: none !important;
